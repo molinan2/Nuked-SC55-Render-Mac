@@ -980,7 +980,7 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
         if (!this_nvram.empty())
         {
             // append instance number so that multiple instances don't clobber each other's nvram
-            this_nvram += std::to_string(i - 1);
+            this_nvram += std::to_string(i);
         }
 
         render_states[i].emu.Init({.lcd_backend = nullptr, .nvram_filename = this_nvram});
