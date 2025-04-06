@@ -48,6 +48,9 @@ struct EMU_Options
     // The backend provided here will receive callbacks from the emulator.
     // If left null, LCD processing will be skipped.
     LCD_Backend* lcd_backend = nullptr;
+
+    // If not empty, nvram will be saved to and loaded from here. JV-880 only.
+    std::filesystem::path nvram_filename;
 };
 
 enum class EMU_SystemReset {
@@ -59,6 +62,14 @@ enum class EMU_SystemReset {
 struct Emulator {
 public:
     Emulator() = default;
+
+    virtual ~Emulator();
+
+    Emulator& operator=(Emulator&&) = default;
+    Emulator(Emulator&&)            = default;
+
+    Emulator(const Emulator&)            = delete;
+    Emulator& operator=(const Emulator&) = delete;
 
     bool Init(const EMU_Options& options);
 
@@ -84,6 +95,10 @@ public:
     mcu_t& GetMCU() { return *m_mcu; }
     pcm_t& GetPCM() { return *m_pcm; }
     lcd_t& GetLCD() { return *m_lcd; }
+
+private:
+    void SaveNVRAM();
+    void LoadNVRAM();
 
 private:
     std::unique_ptr<mcu_t>       m_mcu;

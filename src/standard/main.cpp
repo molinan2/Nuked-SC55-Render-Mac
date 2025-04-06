@@ -139,6 +139,7 @@ struct FE_Parameters
     bool no_lcd = false;
     bool disable_oversampling = false;
     std::optional<uint32_t> asio_sample_rate;
+    std::filesystem::path nvram_filename;
 };
 
 bool FE_AllocateInstance(FE_Application& container, FE_Instance** result)
@@ -677,7 +678,14 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
         fe->sdl_lcd = std::make_unique<LCD_SDL_Backend>();
     }
 
-    if (!fe->emu.Init({.lcd_backend = fe->sdl_lcd.get()}))
+    std::filesystem::path this_nvram = params.nvram_filename;
+    if (!this_nvram.empty())
+    {
+        // append instance number so that multiple instances don't clobber each other's nvram
+        this_nvram += std::to_string(container.instances_in_use - 1);
+    }
+
+    if (!fe->emu.Init({.lcd_backend = fe->sdl_lcd.get(), .nvram_filename = this_nvram}))
     {
         fprintf(stderr, "ERROR: Failed to init emulator.\n");
         return false;
@@ -932,6 +940,15 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
                 return FE_ParseError::RomDirectoryNotFound;
             }
         }
+        else if (reader.Any("--nvram"))
+        {
+            if (!reader.Next())
+            {
+                return FE_ParseError::UnexpectedEnd;
+            }
+
+            result.nvram_filename = reader.Arg();
+        }
         else if (reader.Any("--mk2"))
         {
             result.romset = Romset::MK2;
@@ -1022,6 +1039,7 @@ Emulator options:
   -r, --reset     gs|gm                         Reset system in GS or GM mode.
   -n, --instances <count>                       Set number of emulator instances.
   --no-lcd                                      Run without LCDs.
+  --nvram <filename>                            Saves and loads NVRAM to/from disk. JV-880 only.
 
 ROM management options:
   -d, --rom-directory <dir>                     Sets the directory to load roms from.

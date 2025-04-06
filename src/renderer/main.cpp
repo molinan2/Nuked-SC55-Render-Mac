@@ -49,6 +49,7 @@ struct R_Parameters
     std::string_view romset_name;
     bool debug = false;
     R_EndBehavior end_behavior = R_EndBehavior::Cut;
+    std::filesystem::path nvram_filename;
 };
 
 enum class R_ParseError
@@ -171,6 +172,15 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
             {
                 return R_ParseError::RomDirectoryNotFound;
             }
+        }
+        else if (reader.Any("--nvram"))
+        {
+            if (!reader.Next())
+            {
+                return R_ParseError::UnexpectedEnd;
+            }
+
+            result.nvram_filename = reader.Arg();
         }
         else if (reader.Any("-d", "--romset"))
         {
@@ -966,7 +976,14 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
     R_TrackRenderState render_states[SMF_CHANNEL_COUNT];
     for (size_t i = 0; i < instances; ++i)
     {
-        render_states[i].emu.Init({});
+        std::filesystem::path this_nvram = params.nvram_filename;
+        if (!this_nvram.empty())
+        {
+            // append instance number so that multiple instances don't clobber each other's nvram
+            this_nvram += std::to_string(i - 1);
+        }
+
+        render_states[i].emu.Init({.lcd_backend = nullptr, .nvram_filename = this_nvram});
 
         if (!render_states[i].emu.LoadRoms(rs, params.rom_directory))
         {
@@ -1111,6 +1128,7 @@ Emulator options:
   -r, --reset     gs|gm        Send GS or GM reset before rendering.
   -n, --instances <count>      Number of emulators to use (increases effective polyphony, but
                                takes longer to render)
+  --nvram <filename>           Saves and loads NVRAM to/from disk. JV-880 only.
 
 ROM management options:
   -d, --rom-directory <dir>    Sets the directory to load roms from. Romset will be autodetected when

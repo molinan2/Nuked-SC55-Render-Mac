@@ -118,6 +118,12 @@ Don't create an LCD window. This is useful if you're using the emulator with
 DOOM or a DAW and don't want to spend resources rendering it. When this option
 is set you will not be able to control the emulator with your keyboard.
 
+### `--nvram <filename>`
+
+Saves and loads NVRAM to/from disk. JV-880 only. An instance number will be
+appended to the filename so that when running multiple instances they do not
+clobber each other's NVRAM.
+
 ### `-d, --rom-directory <dir>`
 
 Sets the directory to load roms from. If no specific romset flag is passed, the

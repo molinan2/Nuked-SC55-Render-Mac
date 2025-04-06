@@ -42,6 +42,11 @@
 #include <span>
 #include <vector>
 
+Emulator::~Emulator()
+{
+    SaveNVRAM();
+}
+
 bool Emulator::Init(const EMU_Options& options)
 {
     m_options = options;
@@ -461,6 +466,11 @@ bool Emulator::LoadRoms(Romset romset, const std::filesystem::path& base_path)
         }
     }
 
+    if (m_mcu->is_jv880)
+    {
+        LoadNVRAM();
+    }
+
     MCU_PatchROM(*m_mcu);
 
     return true;
@@ -524,4 +534,28 @@ void Emulator::PostSystemReset(EMU_SystemReset reset)
 void Emulator::Step()
 {
     MCU_Step(*m_mcu);
+}
+
+void Emulator::SaveNVRAM()
+{
+    // emulator was constructed, but never init
+    if (!m_mcu)
+    {
+        return;
+    }
+
+    if (!m_options.nvram_filename.empty() && m_mcu->is_jv880)
+    {
+        std::ofstream file(m_options.nvram_filename, std::ios::binary);
+        file.write((const char*)m_mcu->nvram, NVRAM_SIZE);
+    }
+}
+
+void Emulator::LoadNVRAM()
+{
+    if (!m_options.nvram_filename.empty() && m_mcu->is_jv880)
+    {
+        std::ifstream file(m_options.nvram_filename, std::ios::binary);
+        file.read((char*)m_mcu->nvram, NVRAM_SIZE);
+    }
 }

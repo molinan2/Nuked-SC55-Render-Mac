@@ -7,6 +7,11 @@
   on a per-application basis. The old SDL backend has been moved to the
   standard frontend.
 
+## General enhancements
+
+- Added an `--nvram <filename>` parameter to both frontends. This is only used
+  by the JV-880 and can be used to persist and reload JV-880 settings. (#36)
+
 ## Bugfixes
 
 - Fixed crash on startup when the directory containing the executable had

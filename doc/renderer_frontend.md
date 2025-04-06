@@ -51,6 +51,12 @@ emulator N where N is the MIDI event channel mod `count`. Use this to increase
 effective polyphony. A `count` of 2 is enough to play most MIDIs without
 dropping notes.
 
+### `--nvram <filename>`
+
+Saves and loads NVRAM to/from disk. JV-880 only. An instance number will be
+appended to the filename so that when running multiple instances they do not
+clobber each other's NVRAM.
+
 ### `-d, --rom-directory <dir>`
 
 Sets the directory to load roms from. If no specific romset flag is passed, the
