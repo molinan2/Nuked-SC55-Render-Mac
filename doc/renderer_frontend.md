@@ -39,10 +39,13 @@ Choose how the end of the track is handled:
 - `cut` (default): stop rendering at the last MIDI event
 - `release`: continue to render audio after the last MIDI event until silence.
 
-### `-r, --reset gs|gm`
+### `-r, --reset none|gs|gm`
 
-Sends a reset message to the emulator on startup. This is necessary to correct
-pitch with some roms.
+Sends a reset message to the emulator on startup.
+
+This will default to `gs` when using a SC-55mk2 romset in order to work around
+a firmware issue that causes incorrect instrument pitch. For all other romsets,
+this defaults to `none`.
 
 ### `-n, --instances <count>`
 

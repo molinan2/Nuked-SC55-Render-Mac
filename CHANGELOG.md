@@ -11,6 +11,10 @@
 
 - Added an `--nvram <filename>` parameter to both frontends. This is only used
   by the JV-880 and can be used to persist and reload JV-880 settings. (#36)
+- Both frontends now send a GS reset by default when using a SC-55mk2 romset in
+  order to work around a firmware bug that causes instrument pitch to be
+  initialized incorrectly. Upstream defaults to not sending a reset, so this is
+  a divergence in behavior. To get the old behavior, pass `--reset none`. (#38)
 
 ## Bugfixes
 
