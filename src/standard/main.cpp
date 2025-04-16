@@ -139,6 +139,8 @@ struct FE_Parameters
     bool no_lcd = false;
     bool disable_oversampling = false;
     std::optional<uint32_t> asio_sample_rate;
+    std::string asio_left_channel;
+    std::string asio_right_channel;
     std::filesystem::path nvram_filename;
 };
 
@@ -309,6 +311,33 @@ void FE_QueryAllOutputs(AudioOutputList& outputs)
 #endif
 }
 
+const char* FE_AudioOutputMarkerString(AudioOutputKind kind)
+{
+    switch (kind)
+    {
+    case AudioOutputKind::SDL:
+        // extra space is intentional; width of this string should match in all cases
+        return "(SDL) ";
+    case AudioOutputKind::ASIO:
+        return "(ASIO)";
+    }
+    fprintf(stderr, "PANIC: FE_AudioOutputMarkerString got invalid kind");
+    std::abort();
+}
+
+char FE_ChannelsTreeChar(bool is_last)
+{
+    return is_last ? '`' : '|';
+}
+
+void FE_WriteSpaces(int count)
+{
+    for (int i = 0; i < count; ++i)
+    {
+        fprintf(stderr, " ");
+    }
+}
+
 void FE_PrintAudioDevices()
 {
     AudioOutputList outputs;
@@ -324,7 +353,44 @@ void FE_PrintAudioDevices()
 
         for (size_t i = 0; i < outputs.size(); ++i)
         {
+#if NUKED_ENABLE_ASIO
+            fprintf(stderr, "  %s %zu: %s\n", FE_AudioOutputMarkerString(outputs[i].kind), i, outputs[i].name.c_str());
+            if (outputs[i].kind == AudioOutputKind::ASIO)
+            {
+                ASIO_OutputChannelList channels;
+                if (Out_ASIO_QueryChannels(outputs[i].name.c_str(), channels))
+                {
+                    const size_t max_digits = NDigits((int32_t)(channels.size() - 1));
+
+                    for (size_t channel = 0; channel < channels.size(); ++channel)
+                    {
+                        const size_t this_digits = NDigits((int32_t)channel);
+
+                        // align under first character of output name
+                        // 2 space indent, 6 marker string, 1 space, variable width number, ': '
+                        FE_WriteSpaces(2 + 6 + 1 + (int)NDigits((int)i) + 2);
+
+                        fprintf(stderr,
+                                "%c-- channel %ld: ",
+                                FE_ChannelsTreeChar(channel == channels.size() - 1),
+                                channels[channel].id);
+
+                        FE_WriteSpaces((int)(max_digits - this_digits));
+
+                        fprintf(stderr, "%s\n", channels[channel].name.c_str());
+                    }
+                }
+                else
+                {
+                    // align under first character of output name
+                    // 2 space indent, 6 marker string, 1 space, variable width number, ': '
+                    FE_WriteSpaces(2 + 6 + 1 + (int)NDigits((int)i) + 2);
+                    fprintf(stderr, "(failed to query channels)\n");
+                }
+            }
+#else
             fprintf(stderr, "  %zu: %s\n", i, outputs[i].name.c_str());
+#endif
         }
 
         fprintf(stderr, "\n");
@@ -371,7 +437,7 @@ bool FE_OpenSDLAudio(FE_Application& fe, const AudioOutputParameters& params, co
 }
 
 #if NUKED_ENABLE_ASIO
-bool FE_OpenASIOAudio(FE_Application& fe, const AudioOutputParameters& params, const char* name)
+bool FE_OpenASIOAudio(FE_Application& fe, const ASIO_OutputParameters& params, const char* name)
 {
     if (!Out_ASIO_Create(name, params))
     {
@@ -469,7 +535,11 @@ bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
         else if (output.kind == AudioOutputKind::ASIO)
         {
 #if NUKED_ENABLE_ASIO
-            return FE_OpenASIOAudio(fe, out_params, output.name.c_str());
+            ASIO_OutputParameters asio_params;
+            asio_params.common = out_params;
+            asio_params.left_channel  = params.asio_left_channel;
+            asio_params.right_channel = params.asio_right_channel;
+            return FE_OpenASIOAudio(fe, asio_params, output.name.c_str());
 #else
             fprintf(stderr, "Attempted to open ASIO output without ASIO support\n");
 #endif
@@ -760,6 +830,7 @@ enum class FE_ParseError
     RomDirectoryNotFound,
     FormatInvalid,
     ASIOSampleRateOutOfRange,
+    ASIOChannelInvalid,
     ResetInvalid,
 };
 
@@ -787,6 +858,8 @@ const char* FE_ParseErrorStr(FE_ParseError err)
             return "Output format invalid";
         case FE_ParseError::ASIOSampleRateOutOfRange:
             return "ASIO sample rate out of range";
+        case FE_ParseError::ASIOChannelInvalid:
+            return "ASIO channel invalid";
         case FE_ParseError::ResetInvalid:
             return "Reset invalid (should be none, gs, or gm)";
         }
@@ -1017,6 +1090,24 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
 
             result.asio_sample_rate = asio_sample_rate;
         }
+        else if (reader.Any("--asio-left-channel"))
+        {
+            if (!reader.Next())
+            {
+                return FE_ParseError::UnexpectedEnd;
+            }
+
+            result.asio_left_channel = reader.Arg();
+        }
+        else if (reader.Any("--asio-right-channel"))
+        {
+            if (!reader.Next())
+            {
+                return FE_ParseError::UnexpectedEnd;
+            }
+
+            result.asio_right_channel = reader.Arg();
+        }
 #endif
         else
         {
@@ -1063,6 +1154,8 @@ ROM management options:
 #if NUKED_ENABLE_ASIO
     constexpr const char* EXTRA_ASIO_STR = R"(ASIO options:
   --asio-sample-rate <freq>                     Request frequency from the ASIO driver.
+  --asio-left-channel <channel_name_or_number>  Set left channel for ASIO output.
+  --asio-right-channel <channel_name_or_number> Set right channel for ASIO output.
 
 )";
 #endif
