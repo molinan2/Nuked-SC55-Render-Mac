@@ -20,6 +20,8 @@
 
 - Fixed crash on startup when the directory containing the executable had
   non-English characters. (#30)
+- Fixed renderer desync when using multiple instances and one of the instances
+  received midi data starting later than tick 0. (#42)
 
 # Version 0.5.0 (2025-03-21)
 
