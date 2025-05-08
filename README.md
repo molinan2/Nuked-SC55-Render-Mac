@@ -17,6 +17,7 @@ Differences from upstream:
 - Command line is handled slightly differently. Pass `--help` to a binary to
   see what arguments it accepts.
 - Improved performance without sacrificing accuracy.
+- Support for ASIO output on Windows when building from source.
 
 ## Building
 
