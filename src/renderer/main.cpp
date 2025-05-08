@@ -1122,6 +1122,20 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
         }
         else
         {
+            EMU_RomMapLocationSet missing;
+            if (!EMU_IsCompleteRomset(romset_info, rs, &missing))
+            {
+                fprintf(stderr, "ERROR: Requested romset is incomplete. Missing:\n");
+                for (size_t j = 0; j < (size_t)EMU_RomMapLocation::COUNT; ++j)
+                {
+                    if (missing[j])
+                    {
+                        fprintf(stderr, "  - %s\n", EMU_RomMapLocationToString((EMU_RomMapLocation)j));
+                    }
+                }
+                return false;
+            }
+
             EMU_RomMapLocationSet loaded;
 
             if (!render_states[i].emu.LoadRomsByInfo(rs, romset_info, &loaded))
