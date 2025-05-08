@@ -577,13 +577,13 @@ bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRoms
     return true;
 }
 
-bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, std::vector<EMU_RomMapLocation>* missing)
+bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, EMU_RomMapLocationSet* missing)
 {
     bool is_complete = true;
 
     if (missing)
     {
-        missing->clear();
+        missing->fill(false);
     }
 
     const auto& info = all_info.romsets[(size_t)romset];
@@ -595,7 +595,7 @@ bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, std:
             is_complete = false;
             if (missing)
             {
-                missing->push_back(known.location);
+                (*missing)[(size_t)known.location] = true;
             }
         }
     }

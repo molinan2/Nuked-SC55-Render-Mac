@@ -782,7 +782,7 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
     }
     else
     {
-        std::vector<EMU_RomMapLocation> missing;
+        EMU_RomMapLocationSet missing;
         if (EMU_IsCompleteRomset(container.romset_info, params.romset, &missing))
         {
             EMU_RomMapLocationSet loaded;
@@ -808,9 +808,12 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
         else
         {
             fprintf(stderr, "ERROR: Requested romset is incomplete. Missing:\n");
-            for (EMU_RomMapLocation m : missing)
+            for (size_t j = 0; j < (size_t)EMU_RomMapLocation::COUNT; ++j)
             {
-                fprintf(stderr, "  - %s\n", EMU_RomMapLocationToString(m));
+                if (missing[j])
+                {
+                    fprintf(stderr, "  - %s\n", EMU_RomMapLocationToString((EMU_RomMapLocation)j));
+                }
             }
             return false;
         }
