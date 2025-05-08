@@ -742,6 +742,8 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
 
     FE_Instance* fe = nullptr;
 
+    const size_t instance_id = container.instances_in_use;
+
     if (!FE_AllocateInstance(container, &fe))
     {
         fprintf(stderr, "ERROR: Failed to allocate instance.\n");
@@ -783,10 +785,24 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
         std::vector<EMU_RomMapLocation> missing;
         if (EMU_IsCompleteRomset(container.romset_info, params.romset, &missing))
         {
-            if (!fe->emu.LoadRomsByInfo(params.romset, container.romset_info))
+            EMU_RomMapLocationSet loaded;
+
+            if (!fe->emu.LoadRomsByInfo(params.romset, container.romset_info, &loaded))
             {
-                fprintf(stderr, "ERROR: Failed to load roms.\n");
+                fprintf(stderr, "ERROR: Failed to load roms for instance %02zu\n", instance_id);
                 return false;
+            }
+
+            fprintf(stderr, "Instance #%02zu using %s roms:\n", instance_id, EMU_RomsetName(params.romset));
+            for (size_t j = 0; j < (size_t)EMU_RomMapLocation::COUNT; ++j)
+            {
+                if (loaded[j])
+                {
+                    fprintf(stderr,
+                            "  %-10s %s\n",
+                            EMU_RomMapLocationToString((EMU_RomMapLocation)j),
+                            container.romset_info.romsets[(size_t)params.romset].rom_paths[j].generic_string().c_str());
+                }
             }
         }
         else

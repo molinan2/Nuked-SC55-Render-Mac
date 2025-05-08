@@ -38,6 +38,7 @@
 #include "mcu_timer.h"
 #include "pcm.h"
 #include "submcu.h"
+#include <array>
 #include <filesystem>
 #include <memory>
 #include <span>
@@ -77,6 +78,9 @@ enum class EMU_RomMapLocation
     NONE = COUNT,
 };
 
+// Indexed by EMU_RomMapLocation
+using EMU_RomMapLocationSet = std::array<bool, (size_t)EMU_RomMapLocation::COUNT>;
+
 struct EMU_AllRomsetInfo;
 
 struct Emulator {
@@ -113,9 +117,12 @@ public:
     // this function will load it from `rom_path`. At least one of these must be present to load a rom. If both are
     // empty, nothing will be loaded for that map location.
     //
+    // For roms that were successfully loaded, this function will set their corresponding index in `loaded` to true if
+    // `loaded` is non-null.
+    //
     // It is recommended to check if the romset has all the necessary roms by first calling
     // `EMU_IsCompleteRomset(all_info, romset)`.
-    bool LoadRomsByInfo(Romset romset, const EMU_AllRomsetInfo& all_info);
+    bool LoadRomsByInfo(Romset romset, const EMU_AllRomsetInfo& all_info, EMU_RomMapLocationSet* loaded = nullptr);
 
     void PostMIDI(uint8_t data_byte);
     void PostMIDI(std::span<const uint8_t> data);

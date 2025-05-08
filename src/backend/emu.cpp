@@ -923,8 +923,13 @@ bool Emulator::LoadRom(EMU_RomMapLocation location, std::span<const uint8_t> sou
     return true;
 }
 
-bool Emulator::LoadRomsByInfo(Romset romset, const EMU_AllRomsetInfo& all_info)
+bool Emulator::LoadRomsByInfo(Romset romset, const EMU_AllRomsetInfo& all_info, EMU_RomMapLocationSet* loaded)
 {
+    if (loaded)
+    {
+        loaded->fill(false);
+    }
+
     MCU_SetRomset(GetMCU(), romset);
 
     std::vector<uint8_t> on_demand_buffer;
@@ -941,12 +946,6 @@ bool Emulator::LoadRomsByInfo(Romset romset, const EMU_AllRomsetInfo& all_info)
         }
         else if (!info.rom_paths[i].empty() && info.rom_data[i].empty())
         {
-            fprintf(stderr,
-                    "Load %s %s from file %s\n",
-                    EMU_RomsetName(romset),
-                    EMU_RomMapLocationToString(location),
-                    info.rom_paths[i].generic_string().c_str());
-
             if (!EMU_ReadAllBytes(info.rom_paths[i], on_demand_buffer))
             {
                 fprintf(stderr, "Failed to read file %s\n", info.rom_paths[i].generic_string().c_str());
@@ -958,27 +957,23 @@ bool Emulator::LoadRomsByInfo(Romset romset, const EMU_AllRomsetInfo& all_info)
                 fprintf(stderr, "Failed to load rom %s\n", EMU_RomMapLocationToString(location));
                 return false;
             }
+
+            if (loaded)
+            {
+                (*loaded)[i] = true;
+            }
         }
         else if (!info.rom_data[i].empty())
         {
-            if (info.rom_paths[i].empty())
-            {
-                fprintf(
-                    stderr, "Load %s %s from memory\n", EMU_RomsetName(romset), EMU_RomMapLocationToString(location));
-            }
-            else
-            {
-                fprintf(stderr,
-                        "Load %s %s from memory (source: %s)\n",
-                        EMU_RomsetName(romset),
-                        EMU_RomMapLocationToString(location),
-                        info.rom_paths[i].generic_string().c_str());
-            }
-
             if (!LoadRom(location, info.rom_data[i]))
             {
                 fprintf(stderr, "Failed to load rom %s\n", EMU_RomMapLocationToString(location));
                 return false;
+            }
+
+            if (loaded)
+            {
+                (*loaded)[i] = true;
             }
         }
     }
