@@ -1122,10 +1122,24 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
         }
         else
         {
-            if (!render_states[i].emu.LoadRomsByInfo(rs, romset_info))
+            EMU_RomMapLocationSet loaded;
+
+            if (!render_states[i].emu.LoadRomsByInfo(rs, romset_info, &loaded))
             {
                 fprintf(stderr, "FATAL: Failed to load roms for instance #%02zu\n", i);
                 return false;
+            }
+
+            fprintf(stderr, "Instance #%02zu using %s roms:\n", i, EMU_RomsetName(rs));
+            for (size_t j = 0; j < (size_t)EMU_RomMapLocation::COUNT; ++j)
+            {
+                if (loaded[j])
+                {
+                    fprintf(stderr,
+                            "  %-10s %s\n",
+                            EMU_RomMapLocationToString((EMU_RomMapLocation)j),
+                            romset_info.romsets[(size_t)rs].rom_paths[j].generic_string().c_str());
+                }
             }
         }
 
