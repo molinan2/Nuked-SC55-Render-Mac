@@ -15,6 +15,7 @@
   order to work around a firmware bug that causes instrument pitch to be
   initialized incorrectly. Upstream defaults to not sending a reset, so this is
   a divergence in behavior. To get the old behavior, pass `--reset none`. (#38)
+- Added the ability to route emulator audio to specific ASIO channels. (#39)
 
 ## Bugfixes
 
