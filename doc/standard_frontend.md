@@ -180,3 +180,14 @@ nuked-sc55 will request the native frequency for your selected romset.
 The emulator natively produces audio at 64000hz or 66207hz depending on the
 romset. Some ASIO drivers cannot support these frequencies so resampling to
 `<rate>` is necessary.
+
+### `--asio-left-channel <channel_name_or_number>`
+
+Routes audio from the emulator's left channel to ASIO channel
+`<channel_name_or_number>`.
+
+### `--asio-right-channel <channel_name_or_number>`
+
+Routes audio from the emulator's right channel to ASIO channel
+`<channel_name_or_number>`.
+
