@@ -47,7 +47,7 @@ struct R_Parameters
     bool version = false;
     size_t instances = 1;
     std::optional<EMU_SystemReset> reset;
-    std::filesystem::path rom_directory;
+    std::filesystem::path rom_directory = std::filesystem::current_path();
     AudioFormat output_format = AudioFormat::S16;
     bool output_stdout = false;
     bool disable_oversampling = false;
