@@ -18,6 +18,7 @@ Differences from upstream:
   see what arguments it accepts.
 - Improved performance without sacrificing accuracy.
 - Support for ASIO output on Windows when building from source.
+- Loads roms based on their hashes instead of requiring specific filenames.
 
 ## Building
 
