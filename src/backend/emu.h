@@ -209,3 +209,5 @@ const char* EMU_RomMapLocationToString(EMU_RomMapLocation location);
 //
 // Roms that were loaded successfully will be marked as true in `loaded`.
 bool EMU_LoadRomset(Romset romset, EMU_AllRomsetInfo& all_info, EMU_RomMapLocationSet* loaded = nullptr);
+
+bool EMU_IsOptionalRom(Romset romset, EMU_RomMapLocation location);

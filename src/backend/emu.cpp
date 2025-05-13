@@ -509,8 +509,12 @@ static constexpr EMU_KnownHash EMU_HASHES[] = {
     {ToDigest("aa3101a76d57992246efeda282a2cb0c0f8fdb441c2eed2aa0b0fad4d81f3ad4"), Romset::JV880, EMU_RomMapLocation::WAVEROM1},
     // R15209313 (WAVE B)
     {ToDigest("a7b50bb47734ee9117fa16df1f257990a9a1a0b5ed420337ae4310eb80df75c8"), Romset::JV880, EMU_RomMapLocation::WAVEROM2},
+    // R00000000 (placeholder)
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::JV880, EMU_RomMapLocation::WAVEROM_CARD},
+    // R00000000 (placeholder)
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::JV880, EMU_RomMapLocation::WAVEROM_EXP},
 
-    // TODO: missing jv880 optional roms; optional roms not yet supported
+    // TODO: missing jv880 optional roms
 
     ///////////////////////////////////////////////////////////////////////////
     // SCB-55/RLP-3194
@@ -679,7 +683,7 @@ bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, EMU_
 
     for (const auto& known : EMU_HASHES)
     {
-        if (known.romset == romset && !info.HasRom(known.location))
+        if (known.romset == romset && !info.HasRom(known.location) && !EMU_IsOptionalRom(romset, known.location))
         {
             is_complete = false;
             if (missing)
@@ -765,17 +769,8 @@ Romset EMU_DetectRomsetByFilename(const std::filesystem::path& base_path, EMU_Al
             {
                 all_info.romsets[romset].rom_paths[rom] = std::move(rom_path);
             }
-            else
+            else if (!EMU_IsOptionalRom((Romset)romset, (EMU_RomMapLocation)rom))
             {
-                // TODO: generalize optional roms
-                if ((Romset)romset == Romset::JV880 && (EMU_RomMapLocation)rom == EMU_RomMapLocation::WAVEROM_CARD)
-                {
-                    continue;
-                }
-                if ((Romset)romset == Romset::JV880 && (EMU_RomMapLocation)rom == EMU_RomMapLocation::WAVEROM_EXP)
-                {
-                    continue;
-                }
                 good = false;
             }
         }
@@ -1071,4 +1066,10 @@ bool EMU_LoadRomset(Romset romset, EMU_AllRomsetInfo& all_info, EMU_RomMapLocati
     }
 
     return true;
+}
+
+bool EMU_IsOptionalRom(Romset romset, EMU_RomMapLocation location)
+{
+    return romset == Romset::JV880 &&
+           (location == EMU_RomMapLocation::WAVEROM_CARD || location == EMU_RomMapLocation::WAVEROM_EXP);
 }
