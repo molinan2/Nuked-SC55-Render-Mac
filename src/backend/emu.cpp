@@ -301,9 +301,9 @@ constexpr SHA256Digest ToDigest(const char (&s)[N])
 
 struct EMU_KnownHash
 {
-    SHA256Digest       hash{};
+    SHA256Digest       hash;
     Romset             romset;
-    EMU_RomMapLocation location = EMU_RomMapLocation::NONE;
+    EMU_RomMapLocation location;
 };
 
 // clang-format off
@@ -651,9 +651,6 @@ const char* EMU_RomMapLocationToString(EMU_RomMapLocation location)
         return "WAVEROM_CARD";
     case EMU_RomMapLocation::WAVEROM_EXP:
         return "WAVEROM_EXP";
-    case EMU_RomMapLocation::COUNT:
-        // also NONE
-        break;
     }
     return "invalid location";
 }
@@ -880,9 +877,6 @@ std::span<uint8_t> Emulator::MapBuffer(EMU_RomMapLocation location)
         return GetPCM().waverom_exp;
     case EMU_RomMapLocation::SMROM:
         return m_sm->rom;
-    case EMU_RomMapLocation::COUNT:
-        // also none
-        break;
     }
     fprintf(stderr, "FATAL: MapBuffer called with invalid location %d\n", (int)location);
     std::abort();
@@ -936,7 +930,7 @@ bool Emulator::LoadRomsByInfo(Romset romset, const EMU_AllRomsetInfo& all_info, 
 
     const EMU_RomsetInfo& info = all_info.romsets[(size_t)romset];
 
-    for (int i = 0; i < (int)EMU_RomMapLocation::COUNT; ++i)
+    for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
     {
         const EMU_RomMapLocation location = (EMU_RomMapLocation)i;
 

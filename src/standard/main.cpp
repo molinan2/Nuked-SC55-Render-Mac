@@ -126,7 +126,7 @@ struct FE_Application {
 
 struct FE_AdvancedParameters
 {
-    std::filesystem::path rom_overrides[(size_t)EMU_RomMapLocation::COUNT];
+    std::filesystem::path rom_overrides[EMU_ROMMAPLOCATION_COUNT];
 };
 
 struct FE_Parameters
@@ -794,7 +794,7 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
             }
 
             fprintf(stderr, "Instance #%02zu using %s roms:\n", instance_id, EMU_RomsetName(params.romset));
-            for (size_t j = 0; j < (size_t)EMU_RomMapLocation::COUNT; ++j)
+            for (size_t j = 0; j < EMU_ROMMAPLOCATION_COUNT; ++j)
             {
                 if (loaded[j])
                 {
@@ -808,7 +808,7 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
         else
         {
             fprintf(stderr, "ERROR: Requested romset is incomplete. Missing:\n");
-            for (size_t j = 0; j < (size_t)EMU_RomMapLocation::COUNT; ++j)
+            for (size_t j = 0; j < EMU_ROMMAPLOCATION_COUNT; ++j)
             {
                 if (missing[j])
                 {
@@ -1316,7 +1316,7 @@ int main(int argc, char *argv[])
     // for simplicity, apply overrides to all romsets
     for (size_t i = 0; i < ROMSET_COUNT; ++i)
     {
-        for (size_t j = 0; j < (size_t)EMU_RomMapLocation::COUNT; ++j)
+        for (size_t j = 0; j < EMU_ROMMAPLOCATION_COUNT; ++j)
         {
             frontend.romset_info.romsets[i].rom_paths[j] = params.adv.rom_overrides[j];
         }

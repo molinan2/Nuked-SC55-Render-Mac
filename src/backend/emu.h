@@ -72,14 +72,11 @@ enum class EMU_RomMapLocation
     WAVEROM3,
     WAVEROM_CARD,
     WAVEROM_EXP,
-
-    // do not reorder these
-    COUNT,
-    NONE = COUNT,
 };
+constexpr size_t EMU_ROMMAPLOCATION_COUNT = 8;
 
 // Indexed by EMU_RomMapLocation
-using EMU_RomMapLocationSet = std::array<bool, (size_t)EMU_RomMapLocation::COUNT>;
+using EMU_RomMapLocationSet = std::array<bool, EMU_ROMMAPLOCATION_COUNT>;
 
 struct EMU_AllRomsetInfo;
 
@@ -156,8 +153,8 @@ private:
 struct EMU_RomsetInfo
 {
     // Array indexed by EMU_RomMapLocation
-    std::filesystem::path rom_paths[(size_t)EMU_RomMapLocation::COUNT]{};
-    std::vector<uint8_t>  rom_data[(size_t)EMU_RomMapLocation::COUNT]{};
+    std::filesystem::path rom_paths[EMU_ROMMAPLOCATION_COUNT]{};
+    std::vector<uint8_t>  rom_data[EMU_ROMMAPLOCATION_COUNT]{};
 
     // Release all rom_data for all roms in this romset.
     void PurgeRomData();
