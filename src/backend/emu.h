@@ -195,7 +195,7 @@ std::span<const char*> EMU_GetParsableRomsetNames();
 bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, EMU_RomMapLocationSet* missing = nullptr);
 
 // Picks the first complete romset in `all_info` and writes it to `out_romset`. If multiple romsets are present, the one
-// returned is unspecified. Returns if successful, or false if there are no complete romsets.
+// returned is unspecified. Returns true if successful, or false if there are no complete romsets.
 bool EMU_PickCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset& out_romset);
 
 // Returns true if `location` represents a waverom location.
