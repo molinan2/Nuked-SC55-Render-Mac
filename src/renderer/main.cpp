@@ -1138,6 +1138,12 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
 
             EMU_RomMapLocationSet loaded;
 
+            if (!EMU_LoadRomset(rs, romset_info, &loaded))
+            {
+                fprintf(stderr, "FATAL: Failed to load roms for instance #%02zu\n", i);
+                return false;
+            }
+
             if (!render_states[i].emu.LoadRomsByInfo(rs, romset_info, &loaded))
             {
                 fprintf(stderr, "FATAL: Failed to load roms for instance #%02zu\n", i);

@@ -787,6 +787,12 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
         {
             EMU_RomMapLocationSet loaded;
 
+            if (!EMU_LoadRomset(params.romset, container.romset_info, &loaded))
+            {
+                fprintf(stderr, "ERROR: Failed to load roms for instance %02zu\n", instance_id);
+                return false;
+            }
+
             if (!fe->emu.LoadRomsByInfo(params.romset, container.romset_info, &loaded))
             {
                 fprintf(stderr, "ERROR: Failed to load roms for instance %02zu\n", instance_id);

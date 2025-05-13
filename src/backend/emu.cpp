@@ -560,7 +560,8 @@ bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRoms
             if (known.hash == digest_bytes && !all_info.romsets[(size_t)known.romset].HasRom(known.location))
             {
                 all_info.romsets[(size_t)known.romset].rom_paths[(size_t)known.location] = dir_iter->path();
-                all_info.romsets[(size_t)known.romset].rom_data[(size_t)known.location]  = std::move(buffer);
+                // TODO: we would like to save this, but only in cases where we know it's part of the desired romset
+                //all_info.romsets[(size_t)known.romset].rom_data[(size_t)known.location]  = std::move(buffer);
 
                 buffer = {};
             }
@@ -895,24 +896,17 @@ bool Emulator::LoadRom(EMU_RomMapLocation location, std::span<const uint8_t> sou
         return false;
     }
 
-    if (EMU_IsWaverom(location))
+    if (location == EMU_RomMapLocation::ROM2)
     {
-        unscramble(source.data(), buffer.data(), (int)source.size());
-    }
-    else
-    {
-        if (location == EMU_RomMapLocation::ROM2)
+        if (!std::has_single_bit(source.size()))
         {
-            if (!std::has_single_bit(source.size()))
-            {
-                fprintf(stderr, "FATAL: %s requires a power-of-2 size\n", EMU_RomMapLocationToString(location));
-                return false;
-            }
-            GetMCU().rom2_mask = (int)source.size() - 1;
+            fprintf(stderr, "FATAL: %s requires a power-of-2 size\n", EMU_RomMapLocationToString(location));
+            return false;
         }
-
-        std::copy(source.begin(), source.end(), buffer.begin());
+        GetMCU().rom2_mask = (int)source.size() - 1;
     }
+
+    std::copy(source.begin(), source.end(), buffer.begin());
 
     return true;
 }
@@ -926,49 +920,27 @@ bool Emulator::LoadRomsByInfo(Romset romset, const EMU_AllRomsetInfo& all_info, 
 
     MCU_SetRomset(GetMCU(), romset);
 
-    std::vector<uint8_t> on_demand_buffer;
-
     const EMU_RomsetInfo& info = all_info.romsets[(size_t)romset];
 
     for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
     {
         const EMU_RomMapLocation location = (EMU_RomMapLocation)i;
 
-        if (info.rom_paths[i].empty() && info.rom_data[i].empty())
+        // rom_data should be populated at this point
+        // if it isn't, then there isn't a rom for this location
+        if (info.rom_data[i].empty())
         {
             continue;
         }
-        else if (!info.rom_paths[i].empty() && info.rom_data[i].empty())
+
+        if (!LoadRom(location, info.rom_data[i]))
         {
-            if (!EMU_ReadAllBytes(info.rom_paths[i], on_demand_buffer))
-            {
-                fprintf(stderr, "Failed to read file %s\n", info.rom_paths[i].generic_string().c_str());
-                return false;
-            }
-
-            if (!LoadRom(location, on_demand_buffer))
-            {
-                fprintf(stderr, "Failed to load rom %s\n", EMU_RomMapLocationToString(location));
-                return false;
-            }
-
-            if (loaded)
-            {
-                (*loaded)[i] = true;
-            }
+            return false;
         }
-        else if (!info.rom_data[i].empty())
-        {
-            if (!LoadRom(location, info.rom_data[i]))
-            {
-                fprintf(stderr, "Failed to load rom %s\n", EMU_RomMapLocationToString(location));
-                return false;
-            }
 
-            if (loaded)
-            {
-                (*loaded)[i] = true;
-            }
+        if (loaded)
+        {
+            (*loaded)[i] = true;
         }
     }
 
@@ -1085,4 +1057,60 @@ void EMU_AllRomsetInfo::PurgeRomData()
     {
         romset.PurgeRomData();
     }
+}
+
+bool EMU_LoadRomset(Romset romset, EMU_AllRomsetInfo& all_info, EMU_RomMapLocationSet* loaded)
+{
+    if (loaded)
+    {
+        loaded->fill(false);
+    }
+
+    // We cannot unscramble in-place.
+    std::vector<uint8_t> on_demand_buffer;
+
+    EMU_RomsetInfo& info = all_info.romsets[(size_t)romset];
+
+    for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
+    {
+        const EMU_RomMapLocation location = (EMU_RomMapLocation)i;
+
+        if (info.rom_paths[i].empty() && info.rom_data[i].empty())
+        {
+            continue;
+        }
+        else if (!info.rom_paths[i].empty() && info.rom_data[i].empty())
+        {
+            if (!EMU_ReadAllBytes(info.rom_paths[i], on_demand_buffer))
+            {
+                fprintf(stderr, "Failed to read file %s\n", info.rom_paths[i].generic_string().c_str());
+                return false;
+            }
+
+            if (EMU_IsWaverom(location))
+            {
+                info.rom_data[i].resize(on_demand_buffer.size());
+                unscramble(on_demand_buffer.data(), info.rom_data[i].data(), (int)on_demand_buffer.size());
+            }
+            else
+            {
+                info.rom_data[i] = std::move(on_demand_buffer);
+                on_demand_buffer = {};
+            }
+
+            if (loaded)
+            {
+                (*loaded)[i] = true;
+            }
+        }
+        else if (!info.rom_data[i].empty())
+        {
+            if (loaded)
+            {
+                (*loaded)[i] = true;
+            }
+        }
+    }
+
+    return true;
 }
