@@ -135,88 +135,176 @@ const char* rs_name_simple[(size_t)ROMSET_COUNT] = {
     "sc155mk2"
 };
 
-constexpr int ROM_SET_N_FILES = 6;
-
-const char* roms[(size_t)ROMSET_COUNT][ROM_SET_N_FILES] =
-{
+const char* legacy_rom_names[(size_t)ROMSET_COUNT][EMU_ROMMAPLOCATION_COUNT] = {
+    // MK2
     {
+        // ROM1
         "rom1.bin",
+        // ROM2
         "rom2.bin",
-        "waverom1.bin",
-        "waverom2.bin",
+        // SMROM
         "rom_sm.bin",
+        // WAVEROM1
+        "waverom1.bin",
+        // WAVEROM2
+        "waverom2.bin",
+        // WAVEROM3
+        "",
+        // WAVEROM_CARD
+        "",
+        // WAVEROM_EXP
         "",
     },
-
+    // ST
     {
+        // ROM1
         "rom1.bin",
+        // ROM2
         "rom2_st.bin",
-        "waverom1.bin",
-        "waverom2.bin",
+        // SMROM
         "rom_sm.bin",
+        // WAVEROM1
+        "waverom1.bin",
+        // WAVEROM2
+        "waverom2.bin",
+        // WAVEROM3
+        "",
+        // WAVEROM_CARD
+        "",
+        // WAVEROM_EXP
         "",
     },
-
+    // MK1
     {
+        // ROM1
         "sc55_rom1.bin",
+        // ROM2
         "sc55_rom2.bin",
+        // SMROM
+        "",
+        // WAVEROM1
         "sc55_waverom1.bin",
+        // WAVEROM2
         "sc55_waverom2.bin",
+        // WAVEROM3
         "sc55_waverom3.bin",
+        // WAVEROM_CARD
+        "",
+        // WAVEROM_EXP
         "",
     },
-
+    // CM300
     {
+        // ROM1
         "cm300_rom1.bin",
+        // ROM2
         "cm300_rom2.bin",
+        // SMROM
+        "",
+        // WAVEROM1
         "cm300_waverom1.bin",
+        // WAVEROM2
         "cm300_waverom2.bin",
+        // WAVEROM3
         "cm300_waverom3.bin",
+        // WAVEROM_CARD
+        "",
+        // WAVEROM_EXP
         "",
     },
-
+    // JV880
     {
+        // ROM1
         "jv880_rom1.bin",
+        // ROM2
         "jv880_rom2.bin",
+        // SMROM
+        "",
+        // WAVEROM1
         "jv880_waverom1.bin",
+        // WAVEROM2
         "jv880_waverom2.bin",
-        "jv880_waverom_expansion.bin",
+        // WAVEROM3
+        "",
+        // WAVEROM_CARD
         "jv880_waverom_pcmcard.bin",
+        // WAVEROM_EXP
+        "jv880_waverom_expansion.bin",
     },
-
+    // SCB55
     {
+        // ROM1
         "scb55_rom1.bin",
+        // ROM2
         "scb55_rom2.bin",
+        // SMROM
+        "",
+        // WAVEROM1
         "scb55_waverom1.bin",
+        // WAVEROM2
+        "",
+        // WAVEROM3 - this file being named waverom2 is intentional
         "scb55_waverom2.bin",
+        // WAVEROM_CARD
         "",
+        // WAVEROM_EXP
         "",
     },
-
+    // RLP3237
     {
+        // ROM1
         "rlp3237_rom1.bin",
+        // ROM2
         "rlp3237_rom2.bin",
+        // SMROM
+        "",
+        // WAVEROM1
         "rlp3237_waverom1.bin",
+        // WAVEROM2
         "",
+        // WAVEROM3
         "",
+        // WAVEROM_CARD
+        "",
+        // WAVEROM_EXP
         "",
     },
-
+    // SC155
     {
+        // ROM1
         "sc155_rom1.bin",
+        // ROM2
         "sc155_rom2.bin",
+        // SMROM
+        "",
+        // WAVEROM1
         "sc155_waverom1.bin",
+        // WAVEROM2
         "sc155_waverom2.bin",
+        // WAVEROM3
         "sc155_waverom3.bin",
+        // WAVEROM_CARD
+        "",
+        // WAVEROM_EXP
         "",
     },
-
+    // SC155MK2
     {
+        // ROM1
         "rom1.bin",
+        // ROM2
         "rom2.bin",
-        "waverom1.bin",
-        "waverom2.bin",
+        // SMROM
         "rom_sm.bin",
+        // WAVEROM1
+        "waverom1.bin",
+        // WAVEROM2
+        "waverom2.bin",
+        // WAVEROM3
+        "",
+        // WAVEROM_CARD
+        "",
+        // WAVEROM_EXP
         "",
     },
 };
@@ -656,27 +744,56 @@ const char* EMU_RomMapLocationToString(EMU_RomMapLocation location)
     return "invalid location";
 }
 
-Romset EMU_DetectRomsetByFilename(const std::filesystem::path& base_path)
+Romset EMU_DetectRomsetByFilename(const std::filesystem::path& base_path, EMU_AllRomsetInfo& all_info)
 {
-    for (size_t i = 0; i < (size_t)ROMSET_COUNT; i++)
+    size_t good_romset = (size_t)-1;
+
+    for (size_t romset = 0; romset < ROMSET_COUNT; ++romset)
     {
         bool good = true;
-        for (size_t j = 0; j < 5; j++)
+
+        for (size_t rom = 0; rom < EMU_ROMMAPLOCATION_COUNT; ++rom)
         {
-            if (roms[i][j][0] == '\0')
-                continue;
-            if (!std::filesystem::exists(base_path / roms[i][j]))
+            if (legacy_rom_names[romset][rom][0] == '\0')
             {
+                continue;
+            }
+
+            std::filesystem::path rom_path = base_path / legacy_rom_names[romset][rom];
+
+            if (std::filesystem::exists(rom_path))
+            {
+                all_info.romsets[romset].rom_paths[rom] = std::move(rom_path);
+            }
+            else
+            {
+                // TODO: generalize optional roms
+                if ((Romset)romset == Romset::JV880 && (EMU_RomMapLocation)rom == EMU_RomMapLocation::WAVEROM_CARD)
+                {
+                    continue;
+                }
+                if ((Romset)romset == Romset::JV880 && (EMU_RomMapLocation)rom == EMU_RomMapLocation::WAVEROM_EXP)
+                {
+                    continue;
+                }
                 good = false;
-                break;
             }
         }
-        if (good)
+
+        if (good && good_romset == (size_t)-1)
         {
-            return (Romset)i;
+            good_romset = romset;
         }
     }
-    return Romset::MK2;
+
+    if (good_romset != (size_t)-1)
+    {
+        return (Romset)good_romset;
+    }
+    else
+    {
+        return Romset::MK2;
+    }
 }
 
 bool EMU_ReadStreamExact(std::ifstream& s, void* into, std::streamsize byte_count)
@@ -697,165 +814,6 @@ std::streamsize EMU_ReadStreamUpTo(std::ifstream& s, void* into, std::streamsize
 {
     s.read((char*)into, byte_count);
     return s.gcount();
-}
-
-bool Emulator::LoadRomsByFilename(Romset romset, const std::filesystem::path& base_path)
-{
-    MCU_SetRomset(GetMCU(), romset);
-
-    std::vector<uint8_t> tempbuf(0x800000);
-
-    std::ifstream s_rf[ROM_SET_N_FILES];
-
-    std::filesystem::path rpaths[ROM_SET_N_FILES];
-
-    bool r_ok = true;
-    std::string errors_list;
-
-    for(size_t i = 0; i < ROM_SET_N_FILES; ++i)
-    {
-        if (roms[(size_t)romset][i][0] == '\0')
-        {
-            continue;
-        }
-        rpaths[i] = base_path / roms[(size_t)romset][i];
-        s_rf[i] = std::ifstream(rpaths[i].c_str(), std::ios::binary);
-        bool optional = m_mcu->is_jv880 && i >= 4;
-        r_ok &= optional || s_rf[i];
-        if (!s_rf[i])
-        {
-            if(!errors_list.empty())
-                errors_list.append(", ");
-
-            errors_list.append(rpaths[i].generic_string());
-        }
-    }
-
-    if (!r_ok)
-    {
-        fprintf(stderr, "FATAL ERROR: One of required data ROM files is missing: %s.\n", errors_list.c_str());
-        fflush(stderr);
-        return false;
-    }
-
-    if (!EMU_ReadStreamExact(s_rf[0], m_mcu->rom1, ROM1_SIZE))
-    {
-        fprintf(stderr, "FATAL ERROR: Failed to read the mcu ROM1.\n");
-        fflush(stderr);
-        return false;
-    }
-
-    std::streamsize rom2_read = EMU_ReadStreamUpTo(s_rf[1], m_mcu->rom2, ROM2_SIZE);
-
-    if (rom2_read == ROM2_SIZE || rom2_read == ROM2_SIZE / 2)
-    {
-        m_mcu->rom2_mask = rom2_read - 1;
-    }
-    else
-    {
-        fprintf(stderr, "FATAL ERROR: Failed to read the mcu ROM2.\n");
-        fflush(stderr);
-        return false;
-    }
-
-    if (m_mcu->is_mk1)
-    {
-        if (!EMU_ReadStreamExact(s_rf[2], tempbuf, 0x100000))
-        {
-            fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom1.\n");
-            fflush(stderr);
-            return false;
-        }
-
-        unscramble(tempbuf.data(), m_pcm->waverom1, 0x100000);
-
-        if (!EMU_ReadStreamExact(s_rf[3], tempbuf, 0x100000))
-        {
-            fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom2.\n");
-            fflush(stderr);
-            return false;
-        }
-
-        unscramble(tempbuf.data(), m_pcm->waverom2, 0x100000);
-
-        if (!EMU_ReadStreamExact(s_rf[4], tempbuf, 0x100000))
-        {
-            fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom3.\n");
-            fflush(stderr);
-            return false;
-        }
-
-        unscramble(tempbuf.data(), m_pcm->waverom3, 0x100000);
-    }
-    else if (m_mcu->is_jv880)
-    {
-        if (!EMU_ReadStreamExact(s_rf[2], tempbuf, 0x200000))
-        {
-            fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom1.\n");
-            fflush(stderr);
-            return false;
-        }
-
-        unscramble(tempbuf.data(), m_pcm->waverom1, 0x200000);
-
-        if (!EMU_ReadStreamExact(s_rf[3], tempbuf, 0x200000))
-        {
-            fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom2.\n");
-            fflush(stderr);
-            return false;
-        }
-
-        unscramble(tempbuf.data(), m_pcm->waverom2, 0x200000);
-
-        if (s_rf[4] && EMU_ReadStreamExact(s_rf[4], tempbuf, 0x800000))
-            unscramble(tempbuf.data(), m_pcm->waverom_exp, 0x800000);
-        else
-            fprintf(stderr, "WaveRom EXP not found, skipping it.\n");
-
-        if (s_rf[5] && EMU_ReadStreamExact(s_rf[5], tempbuf, 0x200000))
-            unscramble(tempbuf.data(), m_pcm->waverom_card, 0x200000);
-        else
-            fprintf(stderr, "WaveRom PCM not found, skipping it.\n");
-    }
-    else
-    {
-        if (!EMU_ReadStreamExact(s_rf[2], tempbuf, 0x200000))
-        {
-            fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom1.\n");
-            fflush(stderr);
-            return false;
-        }
-
-        unscramble(tempbuf.data(), m_pcm->waverom1, 0x200000);
-
-        if (s_rf[3])
-        {
-            if (!EMU_ReadStreamExact(s_rf[3], tempbuf, 0x100000))
-            {
-                fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom2.\n");
-                fflush(stderr);
-                return false;
-            }
-
-            unscramble(tempbuf.data(), m_mcu->is_scb55 ? m_pcm->waverom3 : m_pcm->waverom2, 0x100000);
-        }
-
-        if (s_rf[4] && !EMU_ReadStreamExact(s_rf[4], m_sm->rom, ROMSM_SIZE))
-        {
-            fprintf(stderr, "FATAL ERROR: Failed to read the sub mcu ROM.\n");
-            fflush(stderr);
-            return false;
-        }
-    }
-
-    if (m_mcu->is_jv880)
-    {
-        LoadNVRAM();
-    }
-
-    MCU_PatchROM(*m_mcu);
-
-    return true;
 }
 
 std::span<uint8_t> Emulator::MapBuffer(EMU_RomMapLocation location)
