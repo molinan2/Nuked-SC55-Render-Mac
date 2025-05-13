@@ -772,57 +772,46 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
         return false;
     }
 
-    if (params.legacy_romset_detection)
+    EMU_RomMapLocationSet missing;
+    if (EMU_IsCompleteRomset(container.romset_info, params.romset, &missing))
     {
-        if (!fe->emu.LoadRomsByFilename(params.romset, *params.rom_directory))
+        EMU_RomMapLocationSet loaded;
+
+        if (!EMU_LoadRomset(params.romset, container.romset_info, &loaded))
         {
-            fprintf(stderr, "ERROR: Failed to load roms.\n");
+            fprintf(stderr, "ERROR: Failed to load roms for instance %02zu\n", instance_id);
             return false;
+        }
+
+        if (!fe->emu.LoadRomsByInfo(params.romset, container.romset_info, &loaded))
+        {
+            fprintf(stderr, "ERROR: Failed to load roms for instance %02zu\n", instance_id);
+            return false;
+        }
+
+        fprintf(stderr, "Instance #%02zu using %s roms:\n", instance_id, EMU_RomsetName(params.romset));
+        for (size_t j = 0; j < EMU_ROMMAPLOCATION_COUNT; ++j)
+        {
+            if (loaded[j])
+            {
+                fprintf(stderr,
+                        "  %-10s %s\n",
+                        EMU_RomMapLocationToString((EMU_RomMapLocation)j),
+                        container.romset_info.romsets[(size_t)params.romset].rom_paths[j].generic_string().c_str());
+            }
         }
     }
     else
     {
-        EMU_RomMapLocationSet missing;
-        if (EMU_IsCompleteRomset(container.romset_info, params.romset, &missing))
+        fprintf(stderr, "ERROR: Requested romset is incomplete. Missing:\n");
+        for (size_t j = 0; j < EMU_ROMMAPLOCATION_COUNT; ++j)
         {
-            EMU_RomMapLocationSet loaded;
-
-            if (!EMU_LoadRomset(params.romset, container.romset_info, &loaded))
+            if (missing[j])
             {
-                fprintf(stderr, "ERROR: Failed to load roms for instance %02zu\n", instance_id);
-                return false;
-            }
-
-            if (!fe->emu.LoadRomsByInfo(params.romset, container.romset_info, &loaded))
-            {
-                fprintf(stderr, "ERROR: Failed to load roms for instance %02zu\n", instance_id);
-                return false;
-            }
-
-            fprintf(stderr, "Instance #%02zu using %s roms:\n", instance_id, EMU_RomsetName(params.romset));
-            for (size_t j = 0; j < EMU_ROMMAPLOCATION_COUNT; ++j)
-            {
-                if (loaded[j])
-                {
-                    fprintf(stderr,
-                            "  %-10s %s\n",
-                            EMU_RomMapLocationToString((EMU_RomMapLocation)j),
-                            container.romset_info.romsets[(size_t)params.romset].rom_paths[j].generic_string().c_str());
-                }
+                fprintf(stderr, "  - %s\n", EMU_RomMapLocationToString((EMU_RomMapLocation)j));
             }
         }
-        else
-        {
-            fprintf(stderr, "ERROR: Requested romset is incomplete. Missing:\n");
-            for (size_t j = 0; j < EMU_ROMMAPLOCATION_COUNT; ++j)
-            {
-                if (missing[j])
-                {
-                    fprintf(stderr, "  - %s\n", EMU_RomMapLocationToString((EMU_RomMapLocation)j));
-                }
-            }
-            return false;
-        }
+        return false;
     }
 
     fe->emu.Reset();
@@ -1328,7 +1317,11 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (!params.legacy_romset_detection)
+    if (params.legacy_romset_detection)
+    {
+        params.romset = EMU_DetectRomsetByFilename(*params.rom_directory, frontend.romset_info);
+    }
+    else
     {
         if (!EMU_DetectRomsetsByHash(*params.rom_directory, frontend.romset_info))
         {
@@ -1351,7 +1344,7 @@ int main(int argc, char *argv[])
     }
     else if (params.legacy_romset_detection)
     {
-        params.romset = EMU_DetectRomsetByFilename(*params.rom_directory);
+        // do nothing - params.romset was selected above
     }
     else if (!EMU_PickCompleteRomset(frontend.romset_info, params.romset))
     {
