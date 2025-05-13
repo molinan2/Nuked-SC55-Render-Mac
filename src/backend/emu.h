@@ -203,3 +203,13 @@ bool EMU_IsWaverom(EMU_RomMapLocation location);
 
 // Returns `location` as a string.
 const char* EMU_RomMapLocationToString(EMU_RomMapLocation location);
+
+// For each `rom` in `romset`, this function loads the file referenced by `all_info.romsets[romset].rom_paths[rom]` into
+// the corresponding `rom_data`. Waveroms will be unscrambled at this point.
+//
+// `rom` will only be loaded when `rom_data` is empty and `rom_path` is non-empty.
+//
+// To automatically determine rom_paths, call `EMU_DetectRomsetsByHash` with a directory containing roms.
+//
+// Roms that were loaded successfully will be marked as true in `loaded`.
+bool EMU_LoadRomset(Romset romset, EMU_AllRomsetInfo& all_info, EMU_RomMapLocationSet* loaded = nullptr);
