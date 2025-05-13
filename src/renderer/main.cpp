@@ -36,7 +36,7 @@ enum class R_EndBehavior
 
 struct R_AdvancedParameters
 {
-    std::filesystem::path rom_overrides[(size_t)EMU_RomMapLocation::COUNT];
+    std::filesystem::path rom_overrides[EMU_ROMMAPLOCATION_COUNT];
 };
 
 struct R_Parameters
@@ -1036,7 +1036,7 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
     // for simplicity, apply overrides to all romsets
     for (size_t i = 0; i < ROMSET_COUNT; ++i)
     {
-        for (size_t j = 0; j < (size_t)EMU_RomMapLocation::COUNT; ++j)
+        for (size_t j = 0; j < EMU_ROMMAPLOCATION_COUNT; ++j)
         {
             romset_info.romsets[i].rom_paths[j] = params.adv.rom_overrides[j];
         }
@@ -1126,7 +1126,7 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
             if (!EMU_IsCompleteRomset(romset_info, rs, &missing))
             {
                 fprintf(stderr, "ERROR: Requested romset is incomplete. Missing:\n");
-                for (size_t j = 0; j < (size_t)EMU_RomMapLocation::COUNT; ++j)
+                for (size_t j = 0; j < EMU_ROMMAPLOCATION_COUNT; ++j)
                 {
                     if (missing[j])
                     {
@@ -1145,7 +1145,7 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
             }
 
             fprintf(stderr, "Instance #%02zu using %s roms:\n", i, EMU_RomsetName(rs));
-            for (size_t j = 0; j < (size_t)EMU_RomMapLocation::COUNT; ++j)
+            for (size_t j = 0; j < EMU_ROMMAPLOCATION_COUNT; ++j)
             {
                 if (loaded[j])
                 {
