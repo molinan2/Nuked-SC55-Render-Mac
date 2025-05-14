@@ -96,6 +96,20 @@ target_compile_features(nuked-sc55-backend PRIVATE cxx_std_23)
 target_enable_warnings(nuked-sc55-backend)
 
 #==============================================================================
+# Frontend shared code
+#==============================================================================
+add_library(nuked-sc55-common)
+target_sources(nuked-sc55-common
+    PRIVATE
+    src/common/rom_loader.cpp
+)
+target_compile_features(nuked-sc55-common PRIVATE cxx_std_23)
+target_enable_warnings(nuked-sc55-common)
+target_enable_conversion_warnings(nuked-sc55-common)
+target_link_libraries(nuked-sc55-common PRIVATE nuked-sc55-backend)
+target_include_directories(nuked-sc55-common PRIVATE "src/common")
+
+#==============================================================================
 # Standard frontend
 #==============================================================================
 if(SDL2_FOUND)
@@ -124,7 +138,7 @@ if(SDL2_FOUND)
         target_link_libraries(nuked-sc55 PRIVATE SDL2::SDL2main)
     endif()
 
-    target_link_libraries(nuked-sc55 PRIVATE SDL2::SDL2 nuked-sc55-backend)
+    target_link_libraries(nuked-sc55 PRIVATE SDL2::SDL2 nuked-sc55-backend nuked-sc55-common)
     target_compile_features(nuked-sc55 PRIVATE cxx_std_23)
     target_enable_warnings(nuked-sc55)
     target_enable_conversion_warnings(nuked-sc55)
@@ -185,7 +199,7 @@ target_sources(nuked-sc55-render
     src/renderer/wav.h
 )
 
-target_link_libraries(nuked-sc55-render PRIVATE nuked-sc55-backend)
+target_link_libraries(nuked-sc55-render PRIVATE nuked-sc55-backend nuked-sc55-common)
 target_compile_features(nuked-sc55-render PRIVATE cxx_std_23)
 target_enable_warnings(nuked-sc55-render)
 target_enable_conversion_warnings(nuked-sc55-render)
