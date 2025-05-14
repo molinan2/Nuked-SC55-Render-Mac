@@ -150,7 +150,18 @@ void PrintLoadRomsetDiagnostics(FILE*                    output,
         }
         break;
     case LoadRomsetError::RomLoadFailed:
-        // error copying the rom data into the emulator instance; EMU_LoadRomset prints its own diagnostics
+        fprintf(stderr, "Failed to load some %s roms:\n", EMU_RomsetName(result.romset));
+        for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
+        {
+            if (result.loaded[i] != EMU_RomLoadStatus::Unused)
+            {
+                fprintf(stderr,
+                        "  * %s: %-12s %s\n",
+                        ToCString(result.loaded[i]),
+                        EMU_RomMapLocationToString((EMU_RomMapLocation)i),
+                        info.romsets[(size_t)result.romset].rom_paths[i].generic_string().c_str());
+            }
+        }
         break;
     }
 
@@ -159,7 +170,7 @@ void PrintLoadRomsetDiagnostics(FILE*                    output,
         fprintf(stderr, "Using %s romset:\n", EMU_RomsetName(result.romset));
         for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
         {
-            if (result.loaded[i])
+            if (result.loaded[i] == EMU_RomLoadStatus::Loaded)
             {
                 fprintf(stderr,
                         "  * %-12s %s\n",

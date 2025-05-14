@@ -31,7 +31,7 @@ struct LoadRomsetResult
 {
     Romset romset;
 
-    EMU_RomMapLocationSet loaded;
+    EMU_RomLoadStatusSet  loaded;
     EMU_RomMapLocationSet missing;
 };
 
