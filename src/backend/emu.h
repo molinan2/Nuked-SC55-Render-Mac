@@ -92,6 +92,17 @@ const char* ToCString(EMU_RomLoadStatus status);
 
 using EMU_RomLoadStatusSet = std::array<EMU_RomLoadStatus, EMU_ROMMAPLOCATION_COUNT>;
 
+enum class EMU_RomCompletionStatus
+{
+    Present,
+    Missing,
+    Unused,
+};
+
+const char* ToCString(EMU_RomCompletionStatus status);
+
+using EMU_RomCompletionStatusSet = std::array<EMU_RomCompletionStatus, EMU_ROMMAPLOCATION_COUNT>;
+
 struct EMU_AllRomsetInfo;
 
 struct Emulator {
@@ -210,7 +221,9 @@ std::span<const char*> EMU_GetParsableRomsetNames();
 
 // Returns true if `all_info` contains all the files required to load `romset`. Missing roms will be reported in
 // `missing`.
-bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, EMU_RomMapLocationSet* missing = nullptr);
+bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo&    all_info,
+                          Romset                      romset,
+                          EMU_RomCompletionStatusSet* status = nullptr);
 
 // Picks the first complete romset in `all_info` and writes it to `out_romset`. If multiple romsets are present, the one
 // returned is unspecified. Returns true if successful, or false if there are no complete romsets.

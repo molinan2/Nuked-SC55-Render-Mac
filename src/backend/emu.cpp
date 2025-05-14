@@ -683,25 +683,37 @@ bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path,
     return true;
 }
 
-bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, EMU_RomMapLocationSet* missing)
+bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, EMU_RomCompletionStatusSet* status)
 {
     bool is_complete = true;
 
-    if (missing)
+    if (status)
     {
-        missing->fill(false);
+        status->fill(EMU_RomCompletionStatus::Unused);
     }
 
     const auto& info = all_info.romsets[(size_t)romset];
 
     for (const auto& known : EMU_HASHES)
     {
-        if (known.romset == romset && !info.HasRom(known.location) && !EMU_IsOptionalRom(romset, known.location))
+        if (known.romset != romset)
+        {
+            continue;
+        }
+
+        if (!info.HasRom(known.location) && !EMU_IsOptionalRom(romset, known.location))
         {
             is_complete = false;
-            if (missing)
+            if (status)
             {
-                (*missing)[(size_t)known.location] = true;
+                (*status)[(size_t)known.location] = EMU_RomCompletionStatus::Missing;
+            }
+        }
+        else if (info.HasRom(known.location))
+        {
+            if (status)
+            {
+                (*status)[(size_t)known.location] = EMU_RomCompletionStatus::Present;
             }
         }
     }
@@ -1085,6 +1097,20 @@ const char* ToCString(EMU_RomLoadStatus status)
     case EMU_RomLoadStatus::Failed:
         return "Failed";
     case EMU_RomLoadStatus::Unused:
+        return "Unused";
+    }
+    return "Unknown status";
+}
+
+const char* ToCString(EMU_RomCompletionStatus status)
+{
+    switch (status)
+    {
+    case EMU_RomCompletionStatus::Present:
+        return "Present";
+    case EMU_RomCompletionStatus::Missing:
+        return "Missing";
+    case EMU_RomCompletionStatus::Unused:
         return "Unused";
     }
     return "Unknown status";
