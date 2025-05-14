@@ -19,6 +19,8 @@
 #include <string>
 #include <thread>
 
+#include "common/rom_loader.h"
+
 #ifdef _WIN32
 #include <fcntl.h>
 #include <io.h>
@@ -36,7 +38,7 @@ enum class R_EndBehavior
 
 struct R_AdvancedParameters
 {
-    std::filesystem::path rom_overrides[EMU_ROMMAPLOCATION_COUNT];
+    common::RomOverrides rom_overrides;
 };
 
 struct R_Parameters
@@ -1033,110 +1035,20 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
 
     EMU_AllRomsetInfo romset_info;
 
-    Romset rs;
+    common::LoadRomsetResult load_result;
 
-    if (params.romset_name.size())
+    common::LoadRomsetError err = common::LoadRomset(romset_info,
+                                                     params.rom_directory,
+                                                     params.romset_name,
+                                                     params.legacy_romset_detection,
+                                                     params.adv.rom_overrides,
+                                                     load_result);
+
+    common::PrintLoadRomsetDiagnostics(stderr, err, load_result, romset_info);
+
+    if (err != common::LoadRomsetError{})
     {
-        if (!EMU_ParseRomsetName(params.romset_name, rs))
-        {
-            // interpreting romset_name as a char pointer here is safe because it points into argv
-            fprintf(stderr, "Could not parse romset name: `%s`\n", params.romset_name.data());
-            R_PrintRomsets();
-            return false;
-        }
-        fprintf(stderr, "Using romset: %s\n", EMU_RomsetName(rs));
-
-        // When the user specifies a romset, we can speed up the loading process a bit.
-        EMU_RomMapLocationSet desired{};
-        desired[(size_t)rs] = true;
-
-        if (params.legacy_romset_detection)
-        {
-            if (!EMU_DetectRomsetsByFilename(params.rom_directory, romset_info, &desired))
-            {
-                fprintf(stderr, "FATAL: Failed to detect romsets\n");
-                return false;
-            }
-        }
-        else
-        {
-            if (!EMU_DetectRomsetsByHash(params.rom_directory, romset_info, &desired))
-            {
-                fprintf(stderr, "FATAL: Failed to detect romsets\n");
-                return false;
-            }
-        }
-    }
-    else
-    {
-        // No user-specified romset; we'll use whatever romset we can find.
-        if (params.legacy_romset_detection)
-        {
-            if (!EMU_DetectRomsetsByFilename(params.rom_directory, romset_info))
-            {
-                fprintf(stderr, "FATAL: Failed to detect romsets\n");
-                return false;
-            }
-        }
-        else
-        {
-            if (!EMU_DetectRomsetsByHash(params.rom_directory, romset_info))
-            {
-                fprintf(stderr, "FATAL: Failed to detect romsets\n");
-                return false;
-            }
-        }
-
-        if (!EMU_PickCompleteRomset(romset_info, rs))
-        {
-            fprintf(stderr, "FATAL: Couldn't find any complete romsets in rom directory\n");
-            return false;
-        }
-    }
-
-    for (size_t i = 0; i < ROMSET_COUNT; ++i)
-    {
-        for (size_t j = 0; j < EMU_ROMMAPLOCATION_COUNT; ++j)
-        {
-            if (!params.adv.rom_overrides[j].empty())
-            {
-                romset_info.romsets[i].rom_paths[j] = params.adv.rom_overrides[j];
-                romset_info.romsets[i].rom_data[j].clear();
-            }
-        }
-    }
-
-    EMU_RomMapLocationSet missing;
-    if (!EMU_IsCompleteRomset(romset_info, rs, &missing))
-    {
-        fprintf(stderr, "Requested romset %s is incomplete; missing:\n", EMU_RomsetName(rs));
-        for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
-        {
-            if (missing[i])
-            {
-                fprintf(stderr, "  - %s\n", EMU_RomMapLocationToString((EMU_RomMapLocation)i));
-            }
-        }
         return false;
-    }
-
-    EMU_RomMapLocationSet loaded;
-    if (!EMU_LoadRomset(rs, romset_info, &loaded))
-    {
-        fprintf(stderr, "ERROR: Failed to load roms\n");
-        return false;
-    }
-
-    fprintf(stderr, "Using %s roms:\n", EMU_RomsetName(rs));
-    for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
-    {
-        if (loaded[i])
-        {
-            fprintf(stderr,
-                    "  %-10s %s\n",
-                    EMU_RomMapLocationToString((EMU_RomMapLocation)i),
-                    romset_info.romsets[(size_t)rs].rom_paths[i].generic_string().c_str());
-        }
     }
 
     EMU_SystemReset reset = EMU_SystemReset::NONE;
@@ -1144,7 +1056,7 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
     {
         reset = *params.reset;
     }
-    else if (!params.reset && rs == Romset::MK2)
+    else if (!params.reset && load_result.romset == Romset::MK2)
     {
         // user didn't explicitly pass a reset and we're using a buggy romset
         fprintf(stderr, "WARNING: No reset specified with mk2 romset; using gs\n");
@@ -1177,7 +1089,8 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
 
         render_states[i].emu.Init({.lcd_backend = nullptr, .nvram_filename = this_nvram});
 
-        if (!render_states[i].emu.LoadRomsByInfo(rs, romset_info, &loaded))
+        EMU_RomMapLocationSet loaded{};
+        if (!render_states[i].emu.LoadRomsByInfo(load_result.romset, romset_info, &loaded))
         {
             fprintf(stderr, "FATAL: Failed to load roms for instance #%02zu\n", i);
             return false;

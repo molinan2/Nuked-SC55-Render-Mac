@@ -52,6 +52,8 @@
 #include "output_asio.h"
 #include "output_sdl.h"
 
+#include "common/rom_loader.h"
+
 #ifdef _WIN32
 #include <Windows.h>
 #endif
@@ -118,6 +120,7 @@ struct FE_Application {
     size_t instances_in_use = 0;
 
     EMU_AllRomsetInfo romset_info;
+    Romset            romset;
 
     AudioOutput audio_output{};
 
@@ -126,7 +129,7 @@ struct FE_Application {
 
 struct FE_AdvancedParameters
 {
-    std::filesystem::path rom_overrides[EMU_ROMMAPLOCATION_COUNT];
+    common::RomOverrides rom_overrides;
 };
 
 struct FE_Parameters
@@ -141,7 +144,6 @@ struct FE_Parameters
     size_t instances = 1;
     std::string_view romset_name;
     bool legacy_romset_detection = false;
-    Romset romset = Romset::MK2;
     std::optional<std::filesystem::path> rom_directory;
     AudioFormat output_format = AudioFormat::S16;
     bool no_lcd = false;
@@ -772,7 +774,7 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
         return false;
     }
 
-    if (!fe->emu.LoadRomsByInfo(params.romset, container.romset_info))
+    if (!fe->emu.LoadRomsByInfo(container.romset, container.romset_info))
     {
         fprintf(stderr, "ERROR: Failed to load roms for instance %02zu\n", instance_id);
         return false;
@@ -1272,119 +1274,30 @@ int main(int argc, char *argv[])
 
     fprintf(stderr, "ROM directory is: %s\n", params.rom_directory->generic_string().c_str());
 
-    if (params.romset_name.size())
+    common::LoadRomsetResult load_result;
+
+    common::LoadRomsetError err = common::LoadRomset(frontend.romset_info,
+                                                     *params.rom_directory,
+                                                     params.romset_name,
+                                                     params.legacy_romset_detection,
+                                                     params.adv.rom_overrides,
+                                                     load_result);
+
+    common::PrintLoadRomsetDiagnostics(stderr, err, load_result, frontend.romset_info);
+
+    if (err != common::LoadRomsetError{})
     {
-        Romset rs;
-        if (!EMU_ParseRomsetName(params.romset_name, rs))
-        {
-            // interpreting romset_name as a char pointer here is safe because it points into argv
-            fprintf(stderr, "Could not parse romset name: `%s`\n", params.romset_name.data());
-            FE_PrintRomsets();
-            return false;
-        }
-        params.romset = rs;
-
-        // When the user specifies a romset, we can speed up the loading process a bit.
-        EMU_RomMapLocationSet desired{};
-        desired[(size_t)params.romset] = true;
-
-        if (params.legacy_romset_detection)
-        {
-            if (!EMU_DetectRomsetsByFilename(*params.rom_directory, frontend.romset_info, &desired))
-            {
-                fprintf(stderr, "FATAL: Failed to detect romsets\n");
-                return 1;
-            }
-        }
-        else
-        {
-            if (!EMU_DetectRomsetsByHash(*params.rom_directory, frontend.romset_info, &desired))
-            {
-                fprintf(stderr, "FATAL: Failed to detect romsets\n");
-                return 1;
-            }
-        }
-    }
-    else
-    {
-        // No user-specified romset; we'll use whatever romset we can find.
-        if (params.legacy_romset_detection)
-        {
-            if (!EMU_DetectRomsetsByFilename(*params.rom_directory, frontend.romset_info))
-            {
-                fprintf(stderr, "FATAL: Failed to detect romsets\n");
-                return 1;
-            }
-        }
-        else
-        {
-            if (!EMU_DetectRomsetsByHash(*params.rom_directory, frontend.romset_info))
-            {
-                fprintf(stderr, "FATAL: Failed to detect romsets\n");
-                return 1;
-            }
-        }
-
-        if (!EMU_PickCompleteRomset(frontend.romset_info, params.romset))
-        {
-            fprintf(stderr, "FATAL: Couldn't find any complete romsets in rom directory\n");
-            return 1;
-        }
-    }
-
-    for (size_t i = 0; i < ROMSET_COUNT; ++i)
-    {
-        for (size_t j = 0; j < EMU_ROMMAPLOCATION_COUNT; ++j)
-        {
-            if (!params.adv.rom_overrides[j].empty())
-            {
-                frontend.romset_info.romsets[i].rom_paths[j] = params.adv.rom_overrides[j];
-                frontend.romset_info.romsets[i].rom_data[j].clear();
-            }
-        }
-    }
-
-    fprintf(stderr, "Using romset: %s\n", EMU_RomsetName(params.romset));
-
-    EMU_RomMapLocationSet missing;
-    if (!EMU_IsCompleteRomset(frontend.romset_info, params.romset, &missing))
-    {
-        fprintf(stderr, "Requested romset %s is incomplete; missing:\n", EMU_RomsetName(params.romset));
-        for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
-        {
-            if (missing[i])
-            {
-                fprintf(stderr, "  - %s\n", EMU_RomMapLocationToString((EMU_RomMapLocation)i));
-            }
-        }
         return false;
     }
 
-    EMU_RomMapLocationSet loaded;
-    if (!EMU_LoadRomset(params.romset, frontend.romset_info, &loaded))
-    {
-        fprintf(stderr, "ERROR: Failed to load roms\n");
-        return false;
-    }
-
-    fprintf(stderr, "Using %s roms:\n", EMU_RomsetName(params.romset));
-    for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
-    {
-        if (loaded[i])
-        {
-            fprintf(stderr,
-                    "  %-10s %s\n",
-                    EMU_RomMapLocationToString((EMU_RomMapLocation)i),
-                    frontend.romset_info.romsets[(size_t)params.romset].rom_paths[i].generic_string().c_str());
-        }
-    }
+    frontend.romset = load_result.romset;
 
     EMU_SystemReset reset = EMU_SystemReset::NONE;
     if (params.reset)
     {
         reset = *params.reset;
     }
-    else if (!params.reset && params.romset == Romset::MK2)
+    else if (!params.reset && frontend.romset == Romset::MK2)
     {
         // user didn't explicitly pass a reset and we're using a buggy romset
         fprintf(stderr, "WARNING: No reset specified with mk2 romset; using gs\n");
