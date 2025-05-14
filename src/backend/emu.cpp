@@ -579,7 +579,9 @@ static constexpr EMU_KnownHash EMU_HASHES[] = {
 };
 // clang-format on
 
-bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRomsetInfo& all_info)
+bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path,
+                             EMU_AllRomsetInfo&           all_info,
+                             EMU_RomMapLocationSet*       desired)
 {
     std::error_code ec;
 
@@ -652,10 +654,21 @@ bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRoms
             if (known.hash == digest_bytes && !all_info.romsets[(size_t)known.romset].HasRom(known.location))
             {
                 all_info.romsets[(size_t)known.romset].rom_paths[(size_t)known.location] = dir_iter->path();
-                // TODO: we would like to save this, but only in cases where we know it's part of the desired romset
-                //all_info.romsets[(size_t)known.romset].rom_data[(size_t)known.location]  = std::move(buffer);
 
-                buffer = {};
+                if (desired && (*desired)[(size_t)known.location])
+                {
+                    auto& rom_data = all_info.romsets[(size_t)known.romset].rom_data[(size_t)known.location];
+                    if (EMU_IsWaverom(known.location))
+                    {
+                        rom_data.resize(buffer.size());
+                        unscramble(rom_data.data(), buffer.data(), (int)buffer.size());
+                    }
+                    else
+                    {
+                        rom_data = std::move(buffer);
+                        buffer   = {};
+                    }
+                }
             }
         }
 
@@ -748,13 +761,16 @@ const char* EMU_RomMapLocationToString(EMU_RomMapLocation location)
     return "invalid location";
 }
 
-Romset EMU_DetectRomsetByFilename(const std::filesystem::path& base_path, EMU_AllRomsetInfo& all_info)
+bool EMU_DetectRomsetsByFilename(const std::filesystem::path& base_path,
+                                 EMU_AllRomsetInfo&           all_info,
+                                 EMU_RomMapLocationSet*       desired)
 {
-    size_t good_romset = (size_t)-1;
-
     for (size_t romset = 0; romset < ROMSET_COUNT; ++romset)
     {
-        bool good = true;
+        if (desired && !(*desired)[romset])
+        {
+            continue;
+        }
 
         for (size_t rom = 0; rom < EMU_ROMMAPLOCATION_COUNT; ++rom)
         {
@@ -769,26 +785,10 @@ Romset EMU_DetectRomsetByFilename(const std::filesystem::path& base_path, EMU_Al
             {
                 all_info.romsets[romset].rom_paths[rom] = std::move(rom_path);
             }
-            else if (!EMU_IsOptionalRom((Romset)romset, (EMU_RomMapLocation)rom))
-            {
-                good = false;
-            }
-        }
-
-        if (good && good_romset == (size_t)-1)
-        {
-            good_romset = romset;
         }
     }
 
-    if (good_romset != (size_t)-1)
-    {
-        return (Romset)good_romset;
-    }
-    else
-    {
-        return Romset::MK2;
-    }
+    return true;
 }
 
 bool EMU_ReadStreamExact(std::ifstream& s, void* into, std::streamsize byte_count)
