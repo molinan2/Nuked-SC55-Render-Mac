@@ -98,7 +98,7 @@ LoadRomsetError LoadRomset(EMU_AllRomsetInfo&           romset_info,
         }
     }
 
-    if (!EMU_IsCompleteRomset(romset_info, result.romset, &result.missing))
+    if (!EMU_IsCompleteRomset(romset_info, result.romset, &result.completion))
     {
         return LoadRomsetError::IncompleteRomset;
     }
@@ -140,12 +140,24 @@ void PrintLoadRomsetDiagnostics(FILE*                    output,
         fprintf(output, "error: %s\n", ToCString(error));
         break;
     case LoadRomsetError::IncompleteRomset:
-        fprintf(output, "Romset %s is incomplete; missing roms:\n", EMU_RomsetName(result.romset));
+        fprintf(output, "Romset %s is incomplete:\n", EMU_RomsetName(result.romset));
         for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
         {
-            if (result.missing[i])
+            if (result.completion[i] != EMU_RomCompletionStatus::Unused)
             {
-                fprintf(stderr, "  * %s\n", EMU_RomMapLocationToString((EMU_RomMapLocation)i));
+                fprintf(stderr,
+                        "  * %7s: %-12s",
+                        ToCString(result.completion[i]),
+                        EMU_RomMapLocationToString((EMU_RomMapLocation)i));
+
+                if (result.completion[i] == EMU_RomCompletionStatus::Present)
+                {
+                    fprintf(stderr, "%s\n", info.romsets[(size_t)result.romset].rom_paths[i].generic_string().c_str());
+                }
+                else
+                {
+                    fprintf(stderr, "\n");
+                }
             }
         }
         break;
@@ -156,7 +168,7 @@ void PrintLoadRomsetDiagnostics(FILE*                    output,
             if (result.loaded[i] != EMU_RomLoadStatus::Unused)
             {
                 fprintf(stderr,
-                        "  * %s: %-12s %s\n",
+                        "  * %s: %-12s %s",
                         ToCString(result.loaded[i]),
                         EMU_RomMapLocationToString((EMU_RomMapLocation)i),
                         info.romsets[(size_t)result.romset].rom_paths[i].generic_string().c_str());

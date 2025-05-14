@@ -17,7 +17,7 @@ enum class LoadRomsetError
     // tried to autodetect a romset, but none of them were complete
     NoCompleteRomsets,
 
-    // picked a romset, but it has missing roms; they will be available through `missing`
+    // picked a romset, but it has missing roms; they will be available through `completion`
     IncompleteRomset,
 
     // loaded roms will be available through `loaded`
@@ -31,8 +31,8 @@ struct LoadRomsetResult
 {
     Romset romset;
 
-    EMU_RomLoadStatusSet  loaded;
-    EMU_RomMapLocationSet missing;
+    EMU_RomLoadStatusSet       loaded;
+    EMU_RomCompletionStatusSet completion;
 };
 
 // `romset_info`: receives rom paths and rom data
