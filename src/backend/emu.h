@@ -169,18 +169,26 @@ struct EMU_AllRomsetInfo
     void PurgeRomData();
 };
 
-// Picks a romset based on filenames contained in `base_path`. This function requires every rom in the romset to have a
-// specific filename in order for the romset to be considered. Consult the `legacy_rom_names` constant in `emu.cpp` for
-// the exact filename requirements. This function will either return the first complete romset it finds or Romset::MK2
-// if none are found.
-Romset EMU_DetectRomsetByFilename(const std::filesystem::path& base_path, EMU_AllRomsetInfo& all_info);
-
-// Scans files in `base_path` for roms by hashing them. The locations of each rom will be made available in `info`.
-// Unlike `EMU_DetectRomsetByFilename`, this will return *all* romsets in `base_path`.
+// Scans files in `base_path` for specific rom filenames. Consult the `legacy_rom_names` constant in `emu.cpp` for the
+// exact filename requirements.
 //
-// If any of the rom locations in `all_info` are already populated with a path or data, this function will not
-// overwrite them.
-bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRomsetInfo& all_info);
+// If `desired` is non-null, this function will use it as a hint to determine what filenames to examine. This function
+// may also load `rom_data` for desired roms.
+bool EMU_DetectRomsetsByFilename(const std::filesystem::path& base_path,
+                                 EMU_AllRomsetInfo&           all_info,
+                                 EMU_RomMapLocationSet*       desired = nullptr);
+
+// Scans files in `base_path` for roms by hashing them. The locations of each rom will be made available in `info`. This
+// will return *all* romsets in `base_path`.
+//
+// If any of the rom locations in `all_info` are already populated with a path or data, this function will not overwrite
+// them.
+//
+// If `desired` is non-null, this function will use it as a hint to determine what hashes to consider. This function may
+// also load `rom_data` for desired roms.
+bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path,
+                             EMU_AllRomsetInfo&           all_info,
+                             EMU_RomMapLocationSet*       desired = nullptr);
 
 const char* EMU_RomsetName(Romset romset);
 bool EMU_ParseRomsetName(std::string_view name, Romset& romset);
