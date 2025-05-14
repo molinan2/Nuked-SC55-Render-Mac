@@ -78,6 +78,20 @@ constexpr size_t EMU_ROMMAPLOCATION_COUNT = 8;
 // Indexed by EMU_RomMapLocation
 using EMU_RomMapLocationSet = std::array<bool, EMU_ROMMAPLOCATION_COUNT>;
 
+enum class EMU_RomLoadStatus
+{
+    // rom loaded successfully
+    Loaded,
+    // rom could not be loaded - likely IO failure
+    Failed,
+    // rom not used by romset
+    Unused,
+};
+
+const char* ToCString(EMU_RomLoadStatus status);
+
+using EMU_RomLoadStatusSet = std::array<EMU_RomLoadStatus, EMU_ROMMAPLOCATION_COUNT>;
+
 struct EMU_AllRomsetInfo;
 
 struct Emulator {
@@ -216,6 +230,6 @@ const char* EMU_RomMapLocationToString(EMU_RomMapLocation location);
 // To automatically determine rom_paths, call `EMU_DetectRomsetsByHash` with a directory containing roms.
 //
 // Roms that were loaded successfully will be marked as true in `loaded`.
-bool EMU_LoadRomset(Romset romset, EMU_AllRomsetInfo& all_info, EMU_RomMapLocationSet* loaded = nullptr);
+bool EMU_LoadRomset(Romset romset, EMU_AllRomsetInfo& all_info, EMU_RomLoadStatusSet* loaded = nullptr);
 
 bool EMU_IsOptionalRom(Romset romset, EMU_RomMapLocation location);

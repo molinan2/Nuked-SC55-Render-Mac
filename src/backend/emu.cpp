@@ -781,10 +781,7 @@ bool EMU_DetectRomsetsByFilename(const std::filesystem::path& base_path,
 
             std::filesystem::path rom_path = base_path / legacy_rom_names[romset][rom];
 
-            if (std::filesystem::exists(rom_path))
-            {
-                all_info.romsets[romset].rom_paths[rom] = std::move(rom_path);
-            }
+            all_info.romsets[romset].rom_paths[rom] = std::move(rom_path);
         }
     }
 
@@ -1012,12 +1009,9 @@ void EMU_AllRomsetInfo::PurgeRomData()
     }
 }
 
-bool EMU_LoadRomset(Romset romset, EMU_AllRomsetInfo& all_info, EMU_RomMapLocationSet* loaded)
+bool EMU_LoadRomset(Romset romset, EMU_AllRomsetInfo& all_info, EMU_RomLoadStatusSet* loaded)
 {
-    if (loaded)
-    {
-        loaded->fill(false);
-    }
+    bool all_loaded = true;
 
     // We cannot unscramble in-place.
     std::vector<uint8_t> on_demand_buffer;
@@ -1030,14 +1024,22 @@ bool EMU_LoadRomset(Romset romset, EMU_AllRomsetInfo& all_info, EMU_RomMapLocati
 
         if (info.rom_paths[i].empty() && info.rom_data[i].empty())
         {
+            if (loaded)
+            {
+                (*loaded)[i] = EMU_RomLoadStatus::Unused;
+            }
             continue;
         }
         else if (!info.rom_paths[i].empty() && info.rom_data[i].empty())
         {
             if (!EMU_ReadAllBytes(info.rom_paths[i], on_demand_buffer))
             {
-                fprintf(stderr, "Failed to read file %s\n", info.rom_paths[i].generic_string().c_str());
-                return false;
+                all_loaded = false;
+                if (loaded)
+                {
+                    (*loaded)[i] = EMU_RomLoadStatus::Failed;
+                }
+                continue;
             }
 
             if (EMU_IsWaverom(location))
@@ -1053,23 +1055,37 @@ bool EMU_LoadRomset(Romset romset, EMU_AllRomsetInfo& all_info, EMU_RomMapLocati
 
             if (loaded)
             {
-                (*loaded)[i] = true;
+                (*loaded)[i] = EMU_RomLoadStatus::Loaded;
             }
         }
         else if (!info.rom_data[i].empty())
         {
             if (loaded)
             {
-                (*loaded)[i] = true;
+                (*loaded)[i] = EMU_RomLoadStatus::Loaded;
             }
         }
     }
 
-    return true;
+    return all_loaded;
 }
 
 bool EMU_IsOptionalRom(Romset romset, EMU_RomMapLocation location)
 {
     return romset == Romset::JV880 &&
            (location == EMU_RomMapLocation::WAVEROM_CARD || location == EMU_RomMapLocation::WAVEROM_EXP);
+}
+
+const char* ToCString(EMU_RomLoadStatus status)
+{
+    switch (status)
+    {
+    case EMU_RomLoadStatus::Loaded:
+        return "Loaded";
+    case EMU_RomLoadStatus::Failed:
+        return "Failed";
+    case EMU_RomLoadStatus::Unused:
+        return "Unused";
+    }
+    return "Unknown status";
 }
