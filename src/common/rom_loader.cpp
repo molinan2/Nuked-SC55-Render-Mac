@@ -145,29 +145,29 @@ void PrintLoadRomsetDiagnostics(FILE*                    output,
         {
             if (result.completion[i] != EMU_RomCompletionStatus::Unused)
             {
-                fprintf(stderr,
+                fprintf(output,
                         "  * %7s: %-12s",
                         ToCString(result.completion[i]),
                         EMU_RomMapLocationToString((EMU_RomMapLocation)i));
 
                 if (result.completion[i] == EMU_RomCompletionStatus::Present)
                 {
-                    fprintf(stderr, "%s\n", info.romsets[(size_t)result.romset].rom_paths[i].generic_string().c_str());
+                    fprintf(output, "%s\n", info.romsets[(size_t)result.romset].rom_paths[i].generic_string().c_str());
                 }
                 else
                 {
-                    fprintf(stderr, "\n");
+                    fprintf(output, "\n");
                 }
             }
         }
         break;
     case LoadRomsetError::RomLoadFailed:
-        fprintf(stderr, "Failed to load some %s roms:\n", EMU_RomsetName(result.romset));
+        fprintf(output, "Failed to load some %s roms:\n", EMU_RomsetName(result.romset));
         for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
         {
             if (result.loaded[i] != EMU_RomLoadStatus::Unused)
             {
-                fprintf(stderr,
+                fprintf(output,
                         "  * %s: %-12s %s",
                         ToCString(result.loaded[i]),
                         EMU_RomMapLocationToString((EMU_RomMapLocation)i),
@@ -179,12 +179,12 @@ void PrintLoadRomsetDiagnostics(FILE*                    output,
 
     if (error == LoadRomsetError{})
     {
-        fprintf(stderr, "Using %s romset:\n", EMU_RomsetName(result.romset));
+        fprintf(output, "Using %s romset:\n", EMU_RomsetName(result.romset));
         for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
         {
             if (result.loaded[i] == EMU_RomLoadStatus::Loaded)
             {
-                fprintf(stderr,
+                fprintf(output,
                         "  * %-12s %s\n",
                         EMU_RomMapLocationToString((EMU_RomMapLocation)i),
                         info.romsets[(size_t)result.romset].rom_paths[i].generic_string().c_str());
