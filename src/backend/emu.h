@@ -94,8 +94,11 @@ using EMU_RomLoadStatusSet = std::array<EMU_RomLoadStatus, EMU_ROMMAPLOCATION_CO
 
 enum class EMU_RomCompletionStatus
 {
+    // rom is present
     Present,
+    // rom is missing
     Missing,
+    // rom is not used in this romset
     Unused,
 };
 
