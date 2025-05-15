@@ -12,10 +12,10 @@
 
 ## Enhancements
 
-- Changed the default rom loader to locate roms by hash instead of by hardcoded
-  filename. This means that roms do not need specific filenames; they only need
-  to be present in the rom directory. The old behavior can be enabled by
-  passing `--legacy-romset-detection` to either frontend.
+- Both frontends now default to locating roms by hashing files in the rom
+  directory instead of requiring specific filenames. The old behavior can be
+  enabled by passing `--legacy-romset-detection` to either program.
+- Added more informative messages for loaded and missing roms.
 - Added new command line parameters to override specific roms. These are meant
   for advanced users who have roms with unknown hashes. The parameters are:
   `--override-rom1 <path>`, `--override-rom2 <path>`, `--override-smrom
@@ -23,9 +23,6 @@
   `--override-waverom3 <path>`, `--override-waverom-card <path>`,
   `--override-waverom-exp <path>`. Each parameter takes the rom filename to
   load.
-
-## General enhancements
-
 - Added an `--nvram <filename>` parameter to both frontends. This is only used
   by the JV-880 and can be used to persist and reload JV-880 settings. (#36)
 - Both frontends now send a GS reset by default when using a SC-55mk2 romset in
