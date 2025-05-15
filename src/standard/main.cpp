@@ -1172,17 +1172,6 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
     return FE_ParseError::Success;
 }
 
-void FE_PrintRomsets()
-{
-    fprintf(stderr, "Accepted romset names:\n");
-    fprintf(stderr, "  ");
-    for (const char* name : EMU_GetParsableRomsetNames())
-    {
-        fprintf(stderr, "%s ", name);
-    }
-    fprintf(stderr, "\n\n");
-}
-
 void FE_Usage()
 {
     constexpr const char* USAGE_STR = R"(Usage: %s [options]
@@ -1222,7 +1211,7 @@ ROM management options:
 
     std::string name = P_GetProcessPath().stem().generic_string();
     fprintf(stderr, USAGE_STR, name.c_str());
-    FE_PrintRomsets();
+    common::PrintRomsets(stderr);
 #if NUKED_ENABLE_ASIO
     fprintf(stderr, EXTRA_ASIO_STR);
 #endif

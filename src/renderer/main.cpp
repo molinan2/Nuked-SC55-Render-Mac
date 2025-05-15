@@ -358,17 +358,6 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
     return R_ParseError::Success;
 }
 
-void R_PrintRomsets()
-{
-    fprintf(stderr, "Accepted romset names:\n");
-    fprintf(stderr, "  ");
-    for (const char* name : EMU_GetParsableRomsetNames())
-    {
-        fprintf(stderr, "%s ", name);
-    }
-    fprintf(stderr, "\n\n");
-}
-
 void R_Panic(const char* msg, const std::source_location where = std::source_location::current())
 {
     fprintf(stderr, "%s:%d: in %s: %s", where.file_name(), (int)where.line(), where.function_name(), msg);
@@ -1249,7 +1238,7 @@ ROM management options:
     std::string name = P_GetProcessPath().stem().generic_string();
     fprintf(stderr, USAGE_STR, name.c_str());
 
-    R_PrintRomsets();
+    common::PrintRomsets(stderr);
 }
 
 int main(int argc, char* argv[])
