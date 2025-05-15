@@ -774,7 +774,7 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
         return false;
     }
 
-    if (!fe->emu.LoadRomsByInfo(container.romset, container.romset_info))
+    if (!fe->emu.LoadRoms(container.romset, container.romset_info))
     {
         fprintf(stderr, "ERROR: Failed to load roms for instance %02zu\n", instance_id);
         return false;

@@ -873,7 +873,7 @@ bool Emulator::LoadRom(EMU_RomMapLocation location, std::span<const uint8_t> sou
     return true;
 }
 
-bool Emulator::LoadRomsByInfo(Romset romset, const EMU_AllRomsetInfo& all_info, EMU_RomMapLocationSet* loaded)
+bool Emulator::LoadRoms(Romset romset, const EMU_AllRomsetInfo& all_info, EMU_RomMapLocationSet* loaded)
 {
     if (loaded)
     {
