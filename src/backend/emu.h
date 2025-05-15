@@ -129,18 +129,18 @@ public:
 
     void SetSampleCallback(mcu_sample_callback callback, void* userdata);
 
-    // Loads roms based on the metadata in `all_info`. This structure can be manually populated to override filenames or
-    // it can be retreived from `EMU_DetectRomsetsByHash`. If the requested romset info contains `rom_data` (e.g. from a
-    // call to `EMU_DetectRomsetsByHash`) that data will be copied into emulator memory. If the `rom_data` is empty,
-    // this function will load it from `rom_path`. At least one of these must be present to load a rom. If both are
-    // empty, nothing will be loaded for that map location.
+    // Loads roms from buffers referenced by `all_info`. If the slot for a rom in `all_info` has a non-empty `rom_data`,
+    // it will be loaded even if the romset doesn't require it.
+    //
+    // It is unspecified whether or not the emulator will copy `rom_data`. `all_info` should outlive the emulator
+    // instance.
     //
     // For roms that were successfully loaded, this function will set their corresponding index in `loaded` to true if
     // `loaded` is non-null.
     //
     // It is recommended to check if the romset has all the necessary roms by first calling
     // `EMU_IsCompleteRomset(all_info, romset)`.
-    bool LoadRomsByInfo(Romset romset, const EMU_AllRomsetInfo& all_info, EMU_RomMapLocationSet* loaded = nullptr);
+    bool LoadRoms(Romset romset, const EMU_AllRomsetInfo& all_info, EMU_RomMapLocationSet* loaded = nullptr);
 
     void PostMIDI(uint8_t data_byte);
     void PostMIDI(std::span<const uint8_t> data);

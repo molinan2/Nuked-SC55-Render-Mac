@@ -1079,7 +1079,7 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
         render_states[i].emu.Init({.lcd_backend = nullptr, .nvram_filename = this_nvram});
 
         EMU_RomMapLocationSet loaded{};
-        if (!render_states[i].emu.LoadRomsByInfo(load_result.romset, romset_info, &loaded))
+        if (!render_states[i].emu.LoadRoms(load_result.romset, romset_info, &loaded))
         {
             fprintf(stderr, "FATAL: Failed to load roms for instance #%02zu\n", i);
             return false;
