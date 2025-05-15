@@ -168,7 +168,7 @@ void PrintLoadRomsetDiagnostics(FILE*                    output,
             if (result.loaded[i] != EMU_RomLoadStatus::Unused)
             {
                 fprintf(output,
-                        "  * %s: %-12s %s",
+                        "  * %s: %-12s %s\n",
                         ToCString(result.loaded[i]),
                         EMU_RomMapLocationToString((EMU_RomMapLocation)i),
                         info.romsets[(size_t)result.romset].rom_paths[i].generic_string().c_str());
