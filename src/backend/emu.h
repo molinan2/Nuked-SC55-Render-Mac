@@ -75,6 +75,8 @@ enum class EMU_RomMapLocation
 };
 constexpr size_t EMU_ROMMAPLOCATION_COUNT = 8;
 
+const char* ToCString(EMU_RomMapLocation location);
+
 // Indexed by EMU_RomMapLocation
 using EMU_RomMapLocationSet = std::array<bool, EMU_ROMMAPLOCATION_COUNT>;
 
@@ -234,9 +236,6 @@ bool EMU_PickCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset& out_romse
 
 // Returns true if `location` represents a waverom location.
 bool EMU_IsWaverom(EMU_RomMapLocation location);
-
-// Returns `location` as a string.
-const char* EMU_RomMapLocationToString(EMU_RomMapLocation location);
 
 // For each `rom` in `romset`, this function loads the file referenced by `all_info.romsets[romset].rom_paths[rom]` into
 // the corresponding `rom_data`. Waveroms will be unscrambled at this point.

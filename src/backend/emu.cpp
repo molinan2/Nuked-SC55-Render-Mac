@@ -749,7 +749,7 @@ bool EMU_IsWaverom(EMU_RomMapLocation location)
     }
 }
 
-const char* EMU_RomMapLocationToString(EMU_RomMapLocation location)
+const char* ToCString(EMU_RomMapLocation location)
 {
     switch (location)
     {
@@ -853,7 +853,7 @@ bool Emulator::LoadRom(EMU_RomMapLocation location, std::span<const uint8_t> sou
     {
         fprintf(stderr,
                 "FATAL: rom for %s is too large; max size is %d bytes\n",
-                EMU_RomMapLocationToString(location),
+                ToCString(location),
                 (int)buffer.size());
         return false;
     }
@@ -862,7 +862,7 @@ bool Emulator::LoadRom(EMU_RomMapLocation location, std::span<const uint8_t> sou
     {
         if (!std::has_single_bit(source.size()))
         {
-            fprintf(stderr, "FATAL: %s requires a power-of-2 size\n", EMU_RomMapLocationToString(location));
+            fprintf(stderr, "FATAL: %s requires a power-of-2 size\n", ToCString(location));
             return false;
         }
         GetMCU().rom2_mask = (int)source.size() - 1;
