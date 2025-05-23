@@ -148,7 +148,7 @@ void PrintLoadRomsetDiagnostics(FILE*                    output,
                 fprintf(output,
                         "  * %7s: %-12s",
                         ToCString(result.completion[i]),
-                        EMU_RomMapLocationToString((EMU_RomMapLocation)i));
+                        ToCString((EMU_RomMapLocation)i));
 
                 if (result.completion[i] == EMU_RomCompletionStatus::Present)
                 {
@@ -170,7 +170,7 @@ void PrintLoadRomsetDiagnostics(FILE*                    output,
                 fprintf(output,
                         "  * %s: %-12s %s\n",
                         ToCString(result.loaded[i]),
-                        EMU_RomMapLocationToString((EMU_RomMapLocation)i),
+                        ToCString((EMU_RomMapLocation)i),
                         info.romsets[(size_t)result.romset].rom_paths[i].generic_string().c_str());
             }
         }
@@ -186,7 +186,7 @@ void PrintLoadRomsetDiagnostics(FILE*                    output,
             {
                 fprintf(output,
                         "  * %-12s %s\n",
-                        EMU_RomMapLocationToString((EMU_RomMapLocation)i),
+                        ToCString((EMU_RomMapLocation)i),
                         info.romsets[(size_t)result.romset].rom_paths[i].generic_string().c_str());
             }
         }
