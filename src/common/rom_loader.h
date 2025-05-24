@@ -1,6 +1,6 @@
 #pragma once
 
-#include "emu.h"
+#include "rom_io.h"
 
 namespace common
 {
