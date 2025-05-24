@@ -5,7 +5,7 @@
 namespace common
 {
 
-using RomOverrides = std::array<std::filesystem::path, EMU_ROMMAPLOCATION_COUNT>;
+using RomOverrides = std::array<std::filesystem::path, EMU_ROMLOCATION_COUNT>;
 
 enum class LoadRomsetError
 {

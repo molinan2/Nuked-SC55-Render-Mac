@@ -135,7 +135,7 @@ const char* rs_name_simple[(size_t)ROMSET_COUNT] = {
     "sc155mk2"
 };
 
-const char* legacy_rom_names[(size_t)ROMSET_COUNT][EMU_ROMMAPLOCATION_COUNT] = {
+const char* legacy_rom_names[(size_t)ROMSET_COUNT][EMU_ROMLOCATION_COUNT] = {
     // MK2
     {
         // ROM1
@@ -389,9 +389,9 @@ constexpr SHA256Digest ToDigest(const char (&s)[N])
 
 struct EMU_KnownHash
 {
-    SHA256Digest       hash;
-    Romset             romset;
-    EMU_RomMapLocation location;
+    SHA256Digest    hash;
+    Romset          romset;
+    EMU_RomLocation location;
 };
 
 // clang-format off
@@ -401,118 +401,118 @@ static constexpr EMU_KnownHash EMU_HASHES[] = {
     ///////////////////////////////////////////////////////////////////////////
 
     // R15199858 (H8/532 mcu)
-    {ToDigest("8a1eb33c7599b746c0c50283e4349a1bb1773b5c0ec0e9661219bf6c067d2042"), Romset::MK2, EMU_RomMapLocation::ROM1},
+    {ToDigest("8a1eb33c7599b746c0c50283e4349a1bb1773b5c0ec0e9661219bf6c067d2042"), Romset::MK2, EMU_RomLocation::ROM1},
     // R00233567 (H8/532 extra code)
-    {ToDigest("a4c9fd821059054c7e7681d61f49ce6f42ed2fe407a7ec1ba0dfdc9722582ce0"), Romset::MK2, EMU_RomMapLocation::ROM2},
+    {ToDigest("a4c9fd821059054c7e7681d61f49ce6f42ed2fe407a7ec1ba0dfdc9722582ce0"), Romset::MK2, EMU_RomLocation::ROM2},
     // R15199880 (M37450M2 mcu)
-    {ToDigest("b0b5f865a403f7308b4be8d0ed3ba2ed1c22db881b8a8326769dea222f6431d8"), Romset::MK2, EMU_RomMapLocation::SMROM},
+    {ToDigest("b0b5f865a403f7308b4be8d0ed3ba2ed1c22db881b8a8326769dea222f6431d8"), Romset::MK2, EMU_RomLocation::SMROM},
     // R15209359 (WAVE 16M)
-    {ToDigest("c6429e21b9b3a02fbd68ef0b2053668433bee0bccd537a71841bc70b8874243b"), Romset::MK2, EMU_RomMapLocation::WAVEROM1},
+    {ToDigest("c6429e21b9b3a02fbd68ef0b2053668433bee0bccd537a71841bc70b8874243b"), Romset::MK2, EMU_RomLocation::WAVEROM1},
     // R15279813 (WAVE 8M)
-    {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::MK2, EMU_RomMapLocation::WAVEROM2},
+    {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::MK2, EMU_RomLocation::WAVEROM2},
 
     // R15199858 (H8/532 mcu)
-    {ToDigest("8a1eb33c7599b746c0c50283e4349a1bb1773b5c0ec0e9661219bf6c067d2042"), Romset::SC155MK2, EMU_RomMapLocation::ROM1},
+    {ToDigest("8a1eb33c7599b746c0c50283e4349a1bb1773b5c0ec0e9661219bf6c067d2042"), Romset::SC155MK2, EMU_RomLocation::ROM1},
     // R00233567 (H8/532 extra code)
-    {ToDigest("a4c9fd821059054c7e7681d61f49ce6f42ed2fe407a7ec1ba0dfdc9722582ce0"), Romset::SC155MK2, EMU_RomMapLocation::ROM2},
+    {ToDigest("a4c9fd821059054c7e7681d61f49ce6f42ed2fe407a7ec1ba0dfdc9722582ce0"), Romset::SC155MK2, EMU_RomLocation::ROM2},
     // R15199880 (M37450M2 mcu)
-    {ToDigest("b0b5f865a403f7308b4be8d0ed3ba2ed1c22db881b8a8326769dea222f6431d8"), Romset::SC155MK2, EMU_RomMapLocation::SMROM},
+    {ToDigest("b0b5f865a403f7308b4be8d0ed3ba2ed1c22db881b8a8326769dea222f6431d8"), Romset::SC155MK2, EMU_RomLocation::SMROM},
     // R15209359 (WAVE 16M)
-    {ToDigest("c6429e21b9b3a02fbd68ef0b2053668433bee0bccd537a71841bc70b8874243b"), Romset::SC155MK2, EMU_RomMapLocation::WAVEROM1},
+    {ToDigest("c6429e21b9b3a02fbd68ef0b2053668433bee0bccd537a71841bc70b8874243b"), Romset::SC155MK2, EMU_RomLocation::WAVEROM1},
     // R15279813 (WAVE 8M)
-    {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::SC155MK2, EMU_RomMapLocation::WAVEROM2},
+    {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::SC155MK2, EMU_RomLocation::WAVEROM2},
 
     ///////////////////////////////////////////////////////////////////////////
     // SC-55st (v1.01)
     ///////////////////////////////////////////////////////////////////////////
 
     // R15199858 (H8/532 mcu)
-    {ToDigest("8a1eb33c7599b746c0c50283e4349a1bb1773b5c0ec0e9661219bf6c067d2042"), Romset::ST, EMU_RomMapLocation::ROM1},
+    {ToDigest("8a1eb33c7599b746c0c50283e4349a1bb1773b5c0ec0e9661219bf6c067d2042"), Romset::ST, EMU_RomLocation::ROM1},
     // R00561413 (H8/532 extra code)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::ST, EMU_RomMapLocation::ROM2},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::ST, EMU_RomLocation::ROM2},
     // R15199880 (M37450M2 mcu)
-    {ToDigest("b0b5f865a403f7308b4be8d0ed3ba2ed1c22db881b8a8326769dea222f6431d8"), Romset::ST, EMU_RomMapLocation::SMROM},
+    {ToDigest("b0b5f865a403f7308b4be8d0ed3ba2ed1c22db881b8a8326769dea222f6431d8"), Romset::ST, EMU_RomLocation::SMROM},
     // R15209359 (WAVE 16M)
-    {ToDigest("c6429e21b9b3a02fbd68ef0b2053668433bee0bccd537a71841bc70b8874243b"), Romset::ST, EMU_RomMapLocation::WAVEROM1},
+    {ToDigest("c6429e21b9b3a02fbd68ef0b2053668433bee0bccd537a71841bc70b8874243b"), Romset::ST, EMU_RomLocation::WAVEROM1},
     // R15279813 (WAVE 8M)
-    {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::ST, EMU_RomMapLocation::WAVEROM2},
+    {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::ST, EMU_RomLocation::WAVEROM2},
 
     ///////////////////////////////////////////////////////////////////////////
     // SC-55 (v1.21)
     ///////////////////////////////////////////////////////////////////////////
 
     // R15199748 (H8/532 mcu)
-    {ToDigest("7e1bacd1d7c62ed66e465ba05597dcd60dfc13fc23de0287fdbce6cf906c6544"), Romset::MK1, EMU_RomMapLocation::ROM1},
+    {ToDigest("7e1bacd1d7c62ed66e465ba05597dcd60dfc13fc23de0287fdbce6cf906c6544"), Romset::MK1, EMU_RomLocation::ROM1},
     // R1544925800 (H8/532 extra code)
-    {ToDigest("effc6132d68f7e300aaef915ccdd08aba93606c22d23e580daf9ea6617913af1"), Romset::MK1, EMU_RomMapLocation::ROM2},
+    {ToDigest("effc6132d68f7e300aaef915ccdd08aba93606c22d23e580daf9ea6617913af1"), Romset::MK1, EMU_RomLocation::ROM2},
     // R15209276 (WAVE A)
-    {ToDigest("5655509a531804f97ea2d7ef05b8fec20ebf46216b389a84c44169257a4d2007"), Romset::MK1, EMU_RomMapLocation::WAVEROM1},
+    {ToDigest("5655509a531804f97ea2d7ef05b8fec20ebf46216b389a84c44169257a4d2007"), Romset::MK1, EMU_RomLocation::WAVEROM1},
     // R15209277 (WAVE B)
-    {ToDigest("c655b159792d999b90df9e4fa782cf56411ba1eaa0bb3ac2bdaf09e1391006b1"), Romset::MK1, EMU_RomMapLocation::WAVEROM2},
+    {ToDigest("c655b159792d999b90df9e4fa782cf56411ba1eaa0bb3ac2bdaf09e1391006b1"), Romset::MK1, EMU_RomLocation::WAVEROM2},
     // R15209281 (WAVE C)
-    {ToDigest("334b2d16be3c2362210fdbec1c866ad58badeb0f84fd9bf5d0ac599baf077cc2"), Romset::MK1, EMU_RomMapLocation::WAVEROM3},
+    {ToDigest("334b2d16be3c2362210fdbec1c866ad58badeb0f84fd9bf5d0ac599baf077cc2"), Romset::MK1, EMU_RomLocation::WAVEROM3},
 
     ///////////////////////////////////////////////////////////////////////////
     // CM-300/SCC-1 (v1.10)
     ///////////////////////////////////////////////////////////////////////////
 
     // R15199774 (H8/532 mcu)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::CM300, EMU_RomMapLocation::ROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::CM300, EMU_RomLocation::ROM1},
     // R15279809 (H8/532 extra code)
-    {ToDigest("0283d32e6993a0265710c4206463deb937b0c3a4819b69f471a0eca5865719f9"), Romset::CM300, EMU_RomMapLocation::ROM2},
+    {ToDigest("0283d32e6993a0265710c4206463deb937b0c3a4819b69f471a0eca5865719f9"), Romset::CM300, EMU_RomLocation::ROM2},
     // R15279806 (WAVE A)
-    {ToDigest("40c093cbfb4441a5c884e623f882a80b96b2527f9fd431e074398d206c0f073d"), Romset::CM300, EMU_RomMapLocation::WAVEROM1},
+    {ToDigest("40c093cbfb4441a5c884e623f882a80b96b2527f9fd431e074398d206c0f073d"), Romset::CM300, EMU_RomLocation::WAVEROM1},
     // R15279807 (WAVE B)
-    {ToDigest("9bbbcac747bd6f7a2693f4ef10633db8ab626f17d3d9c47c83c3839d4dd2f613"), Romset::CM300, EMU_RomMapLocation::WAVEROM2},
+    {ToDigest("9bbbcac747bd6f7a2693f4ef10633db8ab626f17d3d9c47c83c3839d4dd2f613"), Romset::CM300, EMU_RomLocation::WAVEROM2},
     // R15279808 (WAVE C)
-    {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::CM300, EMU_RomMapLocation::WAVEROM3},
+    {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::CM300, EMU_RomLocation::WAVEROM3},
 
     ///////////////////////////////////////////////////////////////////////////
     // CM-300/SCC-1 (v1.20)
     ///////////////////////////////////////////////////////////////////////////
 
     // R15199774 (H8/532 mcu)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::CM300, EMU_RomMapLocation::ROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::CM300, EMU_RomLocation::ROM1},
     // R15279812 (H8/532 extra code)
-    {ToDigest("fef1acb1969525d66238be5e7811108919b07a4df5fbab656ad084966373483f"), Romset::CM300, EMU_RomMapLocation::ROM2},
+    {ToDigest("fef1acb1969525d66238be5e7811108919b07a4df5fbab656ad084966373483f"), Romset::CM300, EMU_RomLocation::ROM2},
     // R15279806 (WAVE A)
-    {ToDigest("40c093cbfb4441a5c884e623f882a80b96b2527f9fd431e074398d206c0f073d"), Romset::CM300, EMU_RomMapLocation::WAVEROM1},
+    {ToDigest("40c093cbfb4441a5c884e623f882a80b96b2527f9fd431e074398d206c0f073d"), Romset::CM300, EMU_RomLocation::WAVEROM1},
     // R15279807 (WAVE B)
-    {ToDigest("9bbbcac747bd6f7a2693f4ef10633db8ab626f17d3d9c47c83c3839d4dd2f613"), Romset::CM300, EMU_RomMapLocation::WAVEROM2},
+    {ToDigest("9bbbcac747bd6f7a2693f4ef10633db8ab626f17d3d9c47c83c3839d4dd2f613"), Romset::CM300, EMU_RomLocation::WAVEROM2},
     // R15279808 (WAVE C)
-    {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::CM300, EMU_RomMapLocation::WAVEROM3},
+    {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::CM300, EMU_RomLocation::WAVEROM3},
 
     ///////////////////////////////////////////////////////////////////////////
     // SCC-1A
     ///////////////////////////////////////////////////////////////////////////
 
     // R00128523 (H8/532 mcu)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::CM300, EMU_RomMapLocation::ROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::CM300, EMU_RomLocation::ROM1},
     // R00128567 (H8/532 extra code)
-    {ToDigest("f89442734fdebacae87c7707c01b2d7fdbf5940abae738987aee912d34b5882e"), Romset::CM300, EMU_RomMapLocation::ROM2},
+    {ToDigest("f89442734fdebacae87c7707c01b2d7fdbf5940abae738987aee912d34b5882e"), Romset::CM300, EMU_RomLocation::ROM2},
     // R15279806 (WAVE A)
-    {ToDigest("40c093cbfb4441a5c884e623f882a80b96b2527f9fd431e074398d206c0f073d"), Romset::CM300, EMU_RomMapLocation::WAVEROM1},
+    {ToDigest("40c093cbfb4441a5c884e623f882a80b96b2527f9fd431e074398d206c0f073d"), Romset::CM300, EMU_RomLocation::WAVEROM1},
     // R15279807 (WAVE B)
-    {ToDigest("9bbbcac747bd6f7a2693f4ef10633db8ab626f17d3d9c47c83c3839d4dd2f613"), Romset::CM300, EMU_RomMapLocation::WAVEROM2},
+    {ToDigest("9bbbcac747bd6f7a2693f4ef10633db8ab626f17d3d9c47c83c3839d4dd2f613"), Romset::CM300, EMU_RomLocation::WAVEROM2},
     // R15279808 (WAVE C)
-    {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::CM300, EMU_RomMapLocation::WAVEROM3},
+    {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::CM300, EMU_RomLocation::WAVEROM3},
 
     ///////////////////////////////////////////////////////////////////////////
     // JV-880 (v1.0.0)
     ///////////////////////////////////////////////////////////////////////////
 
     // R15199810 (H8/532 mcu)
-    {ToDigest("aabfcf883b29060198566440205f2fae1ce689043ea0fc7074842aaa4fd4823e"), Romset::JV880, EMU_RomMapLocation::ROM1},
+    {ToDigest("aabfcf883b29060198566440205f2fae1ce689043ea0fc7074842aaa4fd4823e"), Romset::JV880, EMU_RomLocation::ROM1},
     // R15209386 (H8/532 extra code)
-    {ToDigest("ed437f1bc75cc558f174707bcfeb45d5e03483efd9bfd0a382ca57c0edb2a40c"), Romset::JV880, EMU_RomMapLocation::ROM2},
+    {ToDigest("ed437f1bc75cc558f174707bcfeb45d5e03483efd9bfd0a382ca57c0edb2a40c"), Romset::JV880, EMU_RomLocation::ROM2},
     // R15209312 (WAVE A)
-    {ToDigest("aa3101a76d57992246efeda282a2cb0c0f8fdb441c2eed2aa0b0fad4d81f3ad4"), Romset::JV880, EMU_RomMapLocation::WAVEROM1},
+    {ToDigest("aa3101a76d57992246efeda282a2cb0c0f8fdb441c2eed2aa0b0fad4d81f3ad4"), Romset::JV880, EMU_RomLocation::WAVEROM1},
     // R15209313 (WAVE B)
-    {ToDigest("a7b50bb47734ee9117fa16df1f257990a9a1a0b5ed420337ae4310eb80df75c8"), Romset::JV880, EMU_RomMapLocation::WAVEROM2},
+    {ToDigest("a7b50bb47734ee9117fa16df1f257990a9a1a0b5ed420337ae4310eb80df75c8"), Romset::JV880, EMU_RomLocation::WAVEROM2},
     // R00000000 (placeholder)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::JV880, EMU_RomMapLocation::WAVEROM_CARD},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::JV880, EMU_RomLocation::WAVEROM_CARD},
     // R00000000 (placeholder)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::JV880, EMU_RomMapLocation::WAVEROM_EXP},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::JV880, EMU_RomLocation::WAVEROM_EXP},
 
     // TODO: missing jv880 optional roms
 
@@ -523,13 +523,13 @@ static constexpr EMU_KnownHash EMU_HASHES[] = {
     // TODO: missing hashes for this romset
 
     // R15199827 (H8/532 mcu)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SCB55, EMU_RomMapLocation::ROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SCB55, EMU_RomLocation::ROM1},
     // R15279828 (H8/532 extra code)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SCB55, EMU_RomMapLocation::ROM2},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SCB55, EMU_RomLocation::ROM2},
     // R15209359 (WAVE 16M)
-    {ToDigest("c6429e21b9b3a02fbd68ef0b2053668433bee0bccd537a71841bc70b8874243b"), Romset::SCB55, EMU_RomMapLocation::WAVEROM1},
+    {ToDigest("c6429e21b9b3a02fbd68ef0b2053668433bee0bccd537a71841bc70b8874243b"), Romset::SCB55, EMU_RomLocation::WAVEROM1},
     // R15279813 (WAVE 8M)
-    {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::SCB55, EMU_RomMapLocation::WAVEROM3},
+    {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::SCB55, EMU_RomLocation::WAVEROM3},
     // ^NOTE: legacy loader looks for a file called wav "scb55_waverom2.bin", but during loading it is actually placed in WAVEROM3
 
     ///////////////////////////////////////////////////////////////////////////
@@ -539,26 +539,26 @@ static constexpr EMU_KnownHash EMU_HASHES[] = {
     // TODO: missing hashes for this romset
 
     // R15199827 (H8/532 mcu)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::RLP3237, EMU_RomMapLocation::ROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::RLP3237, EMU_RomLocation::ROM1},
     // R15209486 (H8/532 extra code)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::RLP3237, EMU_RomMapLocation::ROM2},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::RLP3237, EMU_RomLocation::ROM2},
     // R15279824 (WAVE 16M)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::RLP3237, EMU_RomMapLocation::WAVEROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::RLP3237, EMU_RomLocation::WAVEROM1},
 
     ///////////////////////////////////////////////////////////////////////////
     // SC-155 (rev 1)
     ///////////////////////////////////////////////////////////////////////////
 
     // R15199799 (H8/532 mcu)
-    {ToDigest("24a65c97cdbaa847d6f59193523ce63c73394b4b693a6517ee79441f2fb8a3ee"), Romset::SC155, EMU_RomMapLocation::ROM1},
+    {ToDigest("24a65c97cdbaa847d6f59193523ce63c73394b4b693a6517ee79441f2fb8a3ee"), Romset::SC155, EMU_RomLocation::ROM1},
     // R15209361 (H8/532 extra code)
-    {ToDigest("ceb7b9d3d9d264efe5dc3ba992b94f3be35eb6d0451abc574b6f6b5dc3db237b"), Romset::SC155, EMU_RomMapLocation::ROM2},
+    {ToDigest("ceb7b9d3d9d264efe5dc3ba992b94f3be35eb6d0451abc574b6f6b5dc3db237b"), Romset::SC155, EMU_RomLocation::ROM2},
     // R15209276 (WAVE A)
-    {ToDigest("5655509a531804f97ea2d7ef05b8fec20ebf46216b389a84c44169257a4d2007"), Romset::SC155, EMU_RomMapLocation::WAVEROM1},
+    {ToDigest("5655509a531804f97ea2d7ef05b8fec20ebf46216b389a84c44169257a4d2007"), Romset::SC155, EMU_RomLocation::WAVEROM1},
     // R15209277 (WAVE B)
-    {ToDigest("c655b159792d999b90df9e4fa782cf56411ba1eaa0bb3ac2bdaf09e1391006b1"), Romset::SC155, EMU_RomMapLocation::WAVEROM2},
+    {ToDigest("c655b159792d999b90df9e4fa782cf56411ba1eaa0bb3ac2bdaf09e1391006b1"), Romset::SC155, EMU_RomLocation::WAVEROM2},
     // R15209281 (WAVE C)
-    {ToDigest("334b2d16be3c2362210fdbec1c866ad58badeb0f84fd9bf5d0ac599baf077cc2"), Romset::SC155, EMU_RomMapLocation::WAVEROM3},
+    {ToDigest("334b2d16be3c2362210fdbec1c866ad58badeb0f84fd9bf5d0ac599baf077cc2"), Romset::SC155, EMU_RomLocation::WAVEROM3},
 
     ///////////////////////////////////////////////////////////////////////////
     // SC-155 (rev 2)
@@ -567,21 +567,21 @@ static constexpr EMU_KnownHash EMU_HASHES[] = {
     // TODO: missing hashes for this romset
 
     // R15199799 (H8/532 mcu)
-    {ToDigest("24a65c97cdbaa847d6f59193523ce63c73394b4b693a6517ee79441f2fb8a3ee"), Romset::SC155, EMU_RomMapLocation::ROM1},
+    {ToDigest("24a65c97cdbaa847d6f59193523ce63c73394b4b693a6517ee79441f2fb8a3ee"), Romset::SC155, EMU_RomLocation::ROM1},
     // R15209400 (H8/532 extra code)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SC155, EMU_RomMapLocation::ROM2},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SC155, EMU_RomLocation::ROM2},
     // R15209276 (WAVE A)
-    {ToDigest("5655509a531804f97ea2d7ef05b8fec20ebf46216b389a84c44169257a4d2007"), Romset::SC155, EMU_RomMapLocation::WAVEROM1},
+    {ToDigest("5655509a531804f97ea2d7ef05b8fec20ebf46216b389a84c44169257a4d2007"), Romset::SC155, EMU_RomLocation::WAVEROM1},
     // R15209277 (WAVE B)
-    {ToDigest("c655b159792d999b90df9e4fa782cf56411ba1eaa0bb3ac2bdaf09e1391006b1"), Romset::SC155, EMU_RomMapLocation::WAVEROM2},
+    {ToDigest("c655b159792d999b90df9e4fa782cf56411ba1eaa0bb3ac2bdaf09e1391006b1"), Romset::SC155, EMU_RomLocation::WAVEROM2},
     // R15209281 (WAVE C)
-    {ToDigest("334b2d16be3c2362210fdbec1c866ad58badeb0f84fd9bf5d0ac599baf077cc2"), Romset::SC155, EMU_RomMapLocation::WAVEROM3},
+    {ToDigest("334b2d16be3c2362210fdbec1c866ad58badeb0f84fd9bf5d0ac599baf077cc2"), Romset::SC155, EMU_RomLocation::WAVEROM3},
 };
 // clang-format on
 
 bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path,
                              EMU_AllRomsetInfo&           all_info,
-                             EMU_RomMapLocationSet*       desired)
+                             EMU_RomLocationSet*          desired)
 {
     std::error_code ec;
 
@@ -734,40 +734,40 @@ bool EMU_PickCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset& out_romse
     return false;
 }
 
-bool EMU_IsWaverom(EMU_RomMapLocation location)
+bool EMU_IsWaverom(EMU_RomLocation location)
 {
     switch (location)
     {
-    case EMU_RomMapLocation::WAVEROM1:
-    case EMU_RomMapLocation::WAVEROM2:
-    case EMU_RomMapLocation::WAVEROM3:
-    case EMU_RomMapLocation::WAVEROM_CARD:
-    case EMU_RomMapLocation::WAVEROM_EXP:
+    case EMU_RomLocation::WAVEROM1:
+    case EMU_RomLocation::WAVEROM2:
+    case EMU_RomLocation::WAVEROM3:
+    case EMU_RomLocation::WAVEROM_CARD:
+    case EMU_RomLocation::WAVEROM_EXP:
         return true;
     default:
         return false;
     }
 }
 
-const char* ToCString(EMU_RomMapLocation location)
+const char* ToCString(EMU_RomLocation location)
 {
     switch (location)
     {
-    case EMU_RomMapLocation::ROM1:
+    case EMU_RomLocation::ROM1:
         return "ROM1";
-    case EMU_RomMapLocation::ROM2:
+    case EMU_RomLocation::ROM2:
         return "ROM2";
-    case EMU_RomMapLocation::SMROM:
+    case EMU_RomLocation::SMROM:
         return "SMROM";
-    case EMU_RomMapLocation::WAVEROM1:
+    case EMU_RomLocation::WAVEROM1:
         return "WAVEROM1";
-    case EMU_RomMapLocation::WAVEROM2:
+    case EMU_RomLocation::WAVEROM2:
         return "WAVEROM2";
-    case EMU_RomMapLocation::WAVEROM3:
+    case EMU_RomLocation::WAVEROM3:
         return "WAVEROM3";
-    case EMU_RomMapLocation::WAVEROM_CARD:
+    case EMU_RomLocation::WAVEROM_CARD:
         return "WAVEROM_CARD";
-    case EMU_RomMapLocation::WAVEROM_EXP:
+    case EMU_RomLocation::WAVEROM_EXP:
         return "WAVEROM_EXP";
     }
     return "invalid location";
@@ -775,7 +775,7 @@ const char* ToCString(EMU_RomMapLocation location)
 
 bool EMU_DetectRomsetsByFilename(const std::filesystem::path& base_path,
                                  EMU_AllRomsetInfo&           all_info,
-                                 EMU_RomMapLocationSet*       desired)
+                                 EMU_RomLocationSet*          desired)
 {
     for (size_t romset = 0; romset < ROMSET_COUNT; ++romset)
     {
@@ -784,7 +784,7 @@ bool EMU_DetectRomsetsByFilename(const std::filesystem::path& base_path,
             continue;
         }
 
-        for (size_t rom = 0; rom < EMU_ROMMAPLOCATION_COUNT; ++rom)
+        for (size_t rom = 0; rom < EMU_ROMLOCATION_COUNT; ++rom)
         {
             if (legacy_rom_names[romset][rom][0] == '\0')
             {
@@ -820,32 +820,32 @@ std::streamsize EMU_ReadStreamUpTo(std::ifstream& s, void* into, std::streamsize
     return s.gcount();
 }
 
-std::span<uint8_t> Emulator::MapBuffer(EMU_RomMapLocation location)
+std::span<uint8_t> Emulator::MapBuffer(EMU_RomLocation location)
 {
     switch (location)
     {
-    case EMU_RomMapLocation::ROM1:
+    case EMU_RomLocation::ROM1:
         return GetMCU().rom1;
-    case EMU_RomMapLocation::ROM2:
+    case EMU_RomLocation::ROM2:
         return GetMCU().rom2;
-    case EMU_RomMapLocation::WAVEROM1:
+    case EMU_RomLocation::WAVEROM1:
         return GetPCM().waverom1;
-    case EMU_RomMapLocation::WAVEROM2:
+    case EMU_RomLocation::WAVEROM2:
         return GetPCM().waverom2;
-    case EMU_RomMapLocation::WAVEROM3:
+    case EMU_RomLocation::WAVEROM3:
         return GetPCM().waverom3;
-    case EMU_RomMapLocation::WAVEROM_CARD:
+    case EMU_RomLocation::WAVEROM_CARD:
         return GetPCM().waverom_card;
-    case EMU_RomMapLocation::WAVEROM_EXP:
+    case EMU_RomLocation::WAVEROM_EXP:
         return GetPCM().waverom_exp;
-    case EMU_RomMapLocation::SMROM:
+    case EMU_RomLocation::SMROM:
         return m_sm->rom;
     }
     fprintf(stderr, "FATAL: MapBuffer called with invalid location %d\n", (int)location);
     std::abort();
 }
 
-bool Emulator::LoadRom(EMU_RomMapLocation location, std::span<const uint8_t> source)
+bool Emulator::LoadRom(EMU_RomLocation location, std::span<const uint8_t> source)
 {
     auto buffer = MapBuffer(location);
 
@@ -858,7 +858,7 @@ bool Emulator::LoadRom(EMU_RomMapLocation location, std::span<const uint8_t> sou
         return false;
     }
 
-    if (location == EMU_RomMapLocation::ROM2)
+    if (location == EMU_RomLocation::ROM2)
     {
         if (!std::has_single_bit(source.size()))
         {
@@ -873,7 +873,7 @@ bool Emulator::LoadRom(EMU_RomMapLocation location, std::span<const uint8_t> sou
     return true;
 }
 
-bool Emulator::LoadRoms(Romset romset, const EMU_AllRomsetInfo& all_info, EMU_RomMapLocationSet* loaded)
+bool Emulator::LoadRoms(Romset romset, const EMU_AllRomsetInfo& all_info, EMU_RomLocationSet* loaded)
 {
     if (loaded)
     {
@@ -884,9 +884,9 @@ bool Emulator::LoadRoms(Romset romset, const EMU_AllRomsetInfo& all_info, EMU_Ro
 
     const EMU_RomsetInfo& info = all_info.romsets[(size_t)romset];
 
-    for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
+    for (size_t i = 0; i < EMU_ROMLOCATION_COUNT; ++i)
     {
-        const EMU_RomMapLocation location = (EMU_RomMapLocation)i;
+        const EMU_RomLocation location = (EMU_RomLocation)i;
 
         // rom_data should be populated at this point
         // if it isn't, then there isn't a rom for this location
@@ -1008,7 +1008,7 @@ void EMU_RomsetInfo::PurgeRomData()
     }
 }
 
-bool EMU_RomsetInfo::HasRom(EMU_RomMapLocation location) const
+bool EMU_RomsetInfo::HasRom(EMU_RomLocation location) const
 {
     return !(rom_paths[(size_t)location].empty() && rom_data[(size_t)location].empty());
 }
@@ -1030,9 +1030,9 @@ bool EMU_LoadRomset(Romset romset, EMU_AllRomsetInfo& all_info, EMU_RomLoadStatu
 
     EMU_RomsetInfo& info = all_info.romsets[(size_t)romset];
 
-    for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
+    for (size_t i = 0; i < EMU_ROMLOCATION_COUNT; ++i)
     {
-        const EMU_RomMapLocation location = (EMU_RomMapLocation)i;
+        const EMU_RomLocation location = (EMU_RomLocation)i;
 
         if (info.rom_paths[i].empty() && info.rom_data[i].empty())
         {
@@ -1082,10 +1082,10 @@ bool EMU_LoadRomset(Romset romset, EMU_AllRomsetInfo& all_info, EMU_RomLoadStatu
     return all_loaded;
 }
 
-bool EMU_IsOptionalRom(Romset romset, EMU_RomMapLocation location)
+bool EMU_IsOptionalRom(Romset romset, EMU_RomLocation location)
 {
     return romset == Romset::JV880 &&
-           (location == EMU_RomMapLocation::WAVEROM_CARD || location == EMU_RomMapLocation::WAVEROM_EXP);
+           (location == EMU_RomLocation::WAVEROM_CARD || location == EMU_RomLocation::WAVEROM_EXP);
 }
 
 const char* ToCString(EMU_RomLoadStatus status)
