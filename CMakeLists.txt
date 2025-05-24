@@ -62,6 +62,8 @@ target_sources(nuked-sc55-backend
     src/backend/mcu_timer.cpp
     src/backend/path_util.cpp
     src/backend/pcm.cpp
+    src/backend/rom.cpp
+    src/backend/rom_io.cpp
     src/backend/submcu.cpp
 
     src/backend/sha/sha-private.h
@@ -89,6 +91,8 @@ target_sources(nuked-sc55-backend
     src/backend/path_util.h
     src/backend/pcm.h
     src/backend/ringbuffer.h
+    src/backend/rom.h
+    src/backend/rom_io.h
     src/backend/submcu.h
 )
 target_include_directories(nuked-sc55-backend PUBLIC "src/backend" "${CMAKE_CURRENT_BINARY_DIR}/backend")

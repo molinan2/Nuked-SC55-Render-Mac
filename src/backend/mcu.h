@@ -35,6 +35,7 @@
 
 #include "audio.h"
 #include "mcu_interrupt.h"
+#include "rom.h"
 #include <atomic>
 #include <cstdint>
 
@@ -187,20 +188,6 @@ static const int CARDRAM_SIZE = 0x8000; // JV880 only
 static const int ROMSM_SIZE = 0x1000;
 
 static const uint32_t uart_buffer_size = 8192;
-
-enum class Romset {
-    MK2,
-    ST,
-    MK1,
-    CM300,
-    JV880,
-    SCB55,
-    RLP3237,
-    SC155,
-    SC155MK2,
-};
-
-constexpr size_t ROMSET_COUNT = 9;
 
 typedef void(*mcu_sample_callback)(void* userdata, const AudioFrame<int32_t>& frame);
 
