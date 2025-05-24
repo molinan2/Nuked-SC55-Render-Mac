@@ -61,8 +61,8 @@ enum class EMU_SystemReset {
     GM_RESET,
 };
 
-// Symbolic name for where a rom will be mapped once loaded
-enum class EMU_RomMapLocation
+// Symbolic name for the various roms used by the emulator
+enum class EMU_RomLocation
 {
     ROM1,
     ROM2,
@@ -73,12 +73,12 @@ enum class EMU_RomMapLocation
     WAVEROM_CARD,
     WAVEROM_EXP,
 };
-constexpr size_t EMU_ROMMAPLOCATION_COUNT = 8;
+constexpr size_t EMU_ROMLOCATION_COUNT = 8;
 
-const char* ToCString(EMU_RomMapLocation location);
+const char* ToCString(EMU_RomLocation location);
 
-// Indexed by EMU_RomMapLocation
-using EMU_RomMapLocationSet = std::array<bool, EMU_ROMMAPLOCATION_COUNT>;
+// Indexed by EMU_RomLocation
+using EMU_RomLocationSet = std::array<bool, EMU_ROMLOCATION_COUNT>;
 
 enum class EMU_RomLoadStatus
 {
@@ -92,7 +92,7 @@ enum class EMU_RomLoadStatus
 
 const char* ToCString(EMU_RomLoadStatus status);
 
-using EMU_RomLoadStatusSet = std::array<EMU_RomLoadStatus, EMU_ROMMAPLOCATION_COUNT>;
+using EMU_RomLoadStatusSet = std::array<EMU_RomLoadStatus, EMU_ROMLOCATION_COUNT>;
 
 enum class EMU_RomCompletionStatus
 {
@@ -106,7 +106,7 @@ enum class EMU_RomCompletionStatus
 
 const char* ToCString(EMU_RomCompletionStatus status);
 
-using EMU_RomCompletionStatusSet = std::array<EMU_RomCompletionStatus, EMU_ROMMAPLOCATION_COUNT>;
+using EMU_RomCompletionStatusSet = std::array<EMU_RomCompletionStatus, EMU_ROMLOCATION_COUNT>;
 
 struct EMU_AllRomsetInfo;
 
@@ -145,7 +145,7 @@ public:
     //
     // It is recommended to check if the romset has all the necessary roms by first calling
     // `EMU_IsCompleteRomset(all_info, romset)`.
-    bool LoadRoms(Romset romset, const EMU_AllRomsetInfo& all_info, EMU_RomMapLocationSet* loaded = nullptr);
+    bool LoadRoms(Romset romset, const EMU_AllRomsetInfo& all_info, EMU_RomLocationSet* loaded = nullptr);
 
     void PostMIDI(uint8_t data_byte);
     void PostMIDI(std::span<const uint8_t> data);
@@ -162,9 +162,9 @@ private:
     void SaveNVRAM();
     void LoadNVRAM();
 
-    std::span<uint8_t> MapBuffer(EMU_RomMapLocation location);
+    std::span<uint8_t> MapBuffer(EMU_RomLocation location);
 
-    bool LoadRom(EMU_RomMapLocation location, std::span<const uint8_t> source);
+    bool LoadRom(EMU_RomLocation location, std::span<const uint8_t> source);
 
 private:
     std::unique_ptr<mcu_t>       m_mcu;
@@ -178,15 +178,15 @@ private:
 // For a single romset, this structure maps each rom in the set to a filename on disk and that file's contents.
 struct EMU_RomsetInfo
 {
-    // Array indexed by EMU_RomMapLocation
-    std::filesystem::path rom_paths[EMU_ROMMAPLOCATION_COUNT]{};
-    std::vector<uint8_t>  rom_data[EMU_ROMMAPLOCATION_COUNT]{};
+    // Array indexed by EMU_RomLocation
+    std::filesystem::path rom_paths[EMU_ROMLOCATION_COUNT]{};
+    std::vector<uint8_t>  rom_data[EMU_ROMLOCATION_COUNT]{};
 
     // Release all rom_data for all roms in this romset.
     void PurgeRomData();
 
     // Returns true if at least one of `rom_path` or `rom_data` is populated for `location`.
-    bool HasRom(EMU_RomMapLocation location) const;
+    bool HasRom(EMU_RomLocation location) const;
 };
 
 // Contains EMU_RomsetInfo for all supported romsets.
@@ -206,7 +206,7 @@ struct EMU_AllRomsetInfo
 // may also load `rom_data` for desired roms.
 bool EMU_DetectRomsetsByFilename(const std::filesystem::path& base_path,
                                  EMU_AllRomsetInfo&           all_info,
-                                 EMU_RomMapLocationSet*       desired = nullptr);
+                                 EMU_RomLocationSet*       desired = nullptr);
 
 // Scans files in `base_path` for roms by hashing them. The locations of each rom will be made available in `info`. This
 // will return *all* romsets in `base_path`.
@@ -218,7 +218,7 @@ bool EMU_DetectRomsetsByFilename(const std::filesystem::path& base_path,
 // also load `rom_data` for desired roms.
 bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path,
                              EMU_AllRomsetInfo&           all_info,
-                             EMU_RomMapLocationSet*       desired = nullptr);
+                             EMU_RomLocationSet*       desired = nullptr);
 
 const char* EMU_RomsetName(Romset romset);
 bool EMU_ParseRomsetName(std::string_view name, Romset& romset);
@@ -235,7 +235,7 @@ bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo&    all_info,
 bool EMU_PickCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset& out_romset);
 
 // Returns true if `location` represents a waverom location.
-bool EMU_IsWaverom(EMU_RomMapLocation location);
+bool EMU_IsWaverom(EMU_RomLocation location);
 
 // For each `rom` in `romset`, this function loads the file referenced by `all_info.romsets[romset].rom_paths[rom]` into
 // the corresponding `rom_data`. Waveroms will be unscrambled at this point.
@@ -247,4 +247,4 @@ bool EMU_IsWaverom(EMU_RomMapLocation location);
 // Roms that were loaded successfully will be marked as true in `loaded`.
 bool EMU_LoadRomset(Romset romset, EMU_AllRomsetInfo& all_info, EMU_RomLoadStatusSet* loaded = nullptr);
 
-bool EMU_IsOptionalRom(Romset romset, EMU_RomMapLocation location);
+bool EMU_IsOptionalRom(Romset romset, EMU_RomLocation location);

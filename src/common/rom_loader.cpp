@@ -44,7 +44,7 @@ LoadRomsetError LoadRomset(EMU_AllRomsetInfo&           romset_info,
         }
 
         // When the user specifies a romset, we can speed up the loading process a bit.
-        EMU_RomMapLocationSet desired{};
+        EMU_RomLocationSet desired{};
         desired[(size_t)result.romset] = true;
 
         if (legacy_loader)
@@ -88,7 +88,7 @@ LoadRomsetError LoadRomset(EMU_AllRomsetInfo&           romset_info,
 
     for (size_t i = 0; i < ROMSET_COUNT; ++i)
     {
-        for (size_t j = 0; j < EMU_ROMMAPLOCATION_COUNT; ++j)
+        for (size_t j = 0; j < EMU_ROMLOCATION_COUNT; ++j)
         {
             if (!overrides[j].empty())
             {
@@ -141,14 +141,14 @@ void PrintLoadRomsetDiagnostics(FILE*                    output,
         break;
     case LoadRomsetError::IncompleteRomset:
         fprintf(output, "Romset %s is incomplete:\n", EMU_RomsetName(result.romset));
-        for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
+        for (size_t i = 0; i < EMU_ROMLOCATION_COUNT; ++i)
         {
             if (result.completion[i] != EMU_RomCompletionStatus::Unused)
             {
                 fprintf(output,
                         "  * %7s: %-12s",
                         ToCString(result.completion[i]),
-                        ToCString((EMU_RomMapLocation)i));
+                        ToCString((EMU_RomLocation)i));
 
                 if (result.completion[i] == EMU_RomCompletionStatus::Present)
                 {
@@ -163,14 +163,14 @@ void PrintLoadRomsetDiagnostics(FILE*                    output,
         break;
     case LoadRomsetError::RomLoadFailed:
         fprintf(output, "Failed to load some %s roms:\n", EMU_RomsetName(result.romset));
-        for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
+        for (size_t i = 0; i < EMU_ROMLOCATION_COUNT; ++i)
         {
             if (result.loaded[i] != EMU_RomLoadStatus::Unused)
             {
                 fprintf(output,
                         "  * %s: %-12s %s\n",
                         ToCString(result.loaded[i]),
-                        ToCString((EMU_RomMapLocation)i),
+                        ToCString((EMU_RomLocation)i),
                         info.romsets[(size_t)result.romset].rom_paths[i].generic_string().c_str());
             }
         }
@@ -180,13 +180,13 @@ void PrintLoadRomsetDiagnostics(FILE*                    output,
     if (error == LoadRomsetError{})
     {
         fprintf(output, "Using %s romset:\n", EMU_RomsetName(result.romset));
-        for (size_t i = 0; i < EMU_ROMMAPLOCATION_COUNT; ++i)
+        for (size_t i = 0; i < EMU_ROMLOCATION_COUNT; ++i)
         {
             if (result.loaded[i] == EMU_RomLoadStatus::Loaded)
             {
                 fprintf(output,
                         "  * %-12s %s\n",
-                        ToCString((EMU_RomMapLocation)i),
+                        ToCString((EMU_RomLocation)i),
                         info.romsets[(size_t)result.romset].rom_paths[i].generic_string().c_str());
             }
         }
