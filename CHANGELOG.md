@@ -7,9 +7,9 @@
   on a per-application basis. The old SDL backend has been moved to the
   standard frontend.
 - `Emulator::LoadRoms` now requires rom data to be loaded into an instance of
-  `EMU_AllRomsetInfo` by the caller. Several functions have been added to help
-  with this. See `emu.h` for more information. A complete example can be found
-  under `common/rom_loader.h` and its accompanying source file.
+  `AllRomsetInfo` by the caller. Several functions have been added to help with
+  this. See `emu.h` for more information. A complete example can be found under
+  `common/rom_loader.h` and its accompanying source file.
 
 ## Enhancements
 

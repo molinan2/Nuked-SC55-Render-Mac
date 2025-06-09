@@ -5,11 +5,11 @@
 namespace common
 {
 
-using RomOverrides = std::array<std::filesystem::path, EMU_ROMLOCATION_COUNT>;
+using RomOverrides = std::array<std::filesystem::path, ROMLOCATION_COUNT>;
 
 enum class LoadRomsetError
 {
-    // `desired_romset` should be one of the strings returned by `EMU_GetParsableRomsetNames`
+    // `desired_romset` should be one of the strings returned by `GetParsableRomsetNames`
     InvalidRomsetName = 1,
 
     DetectionFailed,
@@ -31,8 +31,8 @@ struct LoadRomsetResult
 {
     Romset romset;
 
-    EMU_RomLoadStatusSet       loaded;
-    EMU_RomCompletionStatusSet completion;
+    RomLoadStatusSet       loaded;
+    RomCompletionStatusSet completion;
 };
 
 // `romset_info`: receives rom paths and rom data
@@ -40,7 +40,7 @@ struct LoadRomsetResult
 // `desired_romset`: romset the user wants to load; if empty string the first romset in the directory will be returned
 // `legacy_loader`: use the same logic as nukeykt/Nuked-SC55
 // `result`: receives the loaded romset and information about which roms were loaded
-LoadRomsetError LoadRomset(EMU_AllRomsetInfo&           romset_info,
+LoadRomsetError LoadRomset(AllRomsetInfo&           romset_info,
                            const std::filesystem::path& rom_directory,
                            std::string_view             desired_romset,
                            bool                         legacy_loader,
@@ -57,6 +57,6 @@ void PrintRomsets(FILE* output);
 void PrintLoadRomsetDiagnostics(FILE*                    output,
                                 LoadRomsetError          error,
                                 const LoadRomsetResult&  result,
-                                const EMU_AllRomsetInfo& info);
+                                const AllRomsetInfo& info);
 
 } // namespace common

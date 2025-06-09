@@ -94,8 +94,8 @@ public:
     // `loaded` is non-null.
     //
     // It is recommended to check if the romset has all the necessary roms by first calling
-    // `EMU_IsCompleteRomset(all_info, romset)`.
-    bool LoadRoms(Romset romset, const EMU_AllRomsetInfo& all_info, EMU_RomLocationSet* loaded = nullptr);
+    // `IsCompleteRomset(all_info, romset)`.
+    bool LoadRoms(Romset romset, const AllRomsetInfo& all_info, RomLocationSet* loaded = nullptr);
 
     void PostMIDI(uint8_t data_byte);
     void PostMIDI(std::span<const uint8_t> data);
@@ -112,9 +112,9 @@ private:
     void SaveNVRAM();
     void LoadNVRAM();
 
-    std::span<uint8_t> MapBuffer(EMU_RomLocation location);
+    std::span<uint8_t> MapBuffer(RomLocation location);
 
-    bool LoadRom(EMU_RomLocation location, std::span<const uint8_t> source);
+    bool LoadRom(RomLocation location, std::span<const uint8_t> source);
 
 private:
     std::unique_ptr<mcu_t>       m_mcu;

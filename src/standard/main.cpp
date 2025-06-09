@@ -119,7 +119,7 @@ struct FE_Application {
     FE_Instance instances[FE_MAX_INSTANCES];
     size_t instances_in_use = 0;
 
-    EMU_AllRomsetInfo romset_info;
+    AllRomsetInfo romset_info;
     Romset            romset;
 
     AudioOutput audio_output{};
@@ -1063,7 +1063,7 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
                 return FE_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_overrides[(size_t)EMU_RomLocation::ROM1] = reader.Arg();
+            result.adv.rom_overrides[(size_t)RomLocation::ROM1] = reader.Arg();
         }
         else if (reader.Any("--override-rom2"))
         {
@@ -1072,7 +1072,7 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
                 return FE_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_overrides[(size_t)EMU_RomLocation::ROM2] = reader.Arg();
+            result.adv.rom_overrides[(size_t)RomLocation::ROM2] = reader.Arg();
         }
         else if (reader.Any("--override-smrom"))
         {
@@ -1081,7 +1081,7 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
                 return FE_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_overrides[(size_t)EMU_RomLocation::SMROM] = reader.Arg();
+            result.adv.rom_overrides[(size_t)RomLocation::SMROM] = reader.Arg();
         }
         else if (reader.Any("--override-waverom1"))
         {
@@ -1090,7 +1090,7 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
                 return FE_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_overrides[(size_t)EMU_RomLocation::WAVEROM1] = reader.Arg();
+            result.adv.rom_overrides[(size_t)RomLocation::WAVEROM1] = reader.Arg();
         }
         else if (reader.Any("--override-waverom2"))
         {
@@ -1099,7 +1099,7 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
                 return FE_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_overrides[(size_t)EMU_RomLocation::WAVEROM2] = reader.Arg();
+            result.adv.rom_overrides[(size_t)RomLocation::WAVEROM2] = reader.Arg();
         }
         else if (reader.Any("--override-waverom3"))
         {
@@ -1108,7 +1108,7 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
                 return FE_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_overrides[(size_t)EMU_RomLocation::WAVEROM3] = reader.Arg();
+            result.adv.rom_overrides[(size_t)RomLocation::WAVEROM3] = reader.Arg();
         }
         else if (reader.Any("--override-waverom-card"))
         {
@@ -1117,7 +1117,7 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
                 return FE_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_overrides[(size_t)EMU_RomLocation::WAVEROM_CARD] = reader.Arg();
+            result.adv.rom_overrides[(size_t)RomLocation::WAVEROM_CARD] = reader.Arg();
         }
         else if (reader.Any("--override-waverom-exp"))
         {
@@ -1126,7 +1126,7 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
                 return FE_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_overrides[(size_t)EMU_RomLocation::WAVEROM_EXP] = reader.Arg();
+            result.adv.rom_overrides[(size_t)RomLocation::WAVEROM_EXP] = reader.Arg();
         }
 #if NUKED_ENABLE_ASIO
         else if (reader.Any("--asio-sample-rate"))

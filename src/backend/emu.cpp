@@ -101,7 +101,7 @@ void Emulator::SetSampleCallback(mcu_sample_callback callback, void* userdata)
     m_mcu->sample_callback = callback;
 }
 
-bool Emulator::LoadRoms(Romset romset, const EMU_AllRomsetInfo& all_info, EMU_RomLocationSet* loaded)
+bool Emulator::LoadRoms(Romset romset, const AllRomsetInfo& all_info, RomLocationSet* loaded)
 {
     if (loaded)
     {
@@ -110,11 +110,11 @@ bool Emulator::LoadRoms(Romset romset, const EMU_AllRomsetInfo& all_info, EMU_Ro
 
     MCU_SetRomset(GetMCU(), romset);
 
-    const EMU_RomsetInfo& info = all_info.romsets[(size_t)romset];
+    const RomsetInfo& info = all_info.romsets[(size_t)romset];
 
-    for (size_t i = 0; i < EMU_ROMLOCATION_COUNT; ++i)
+    for (size_t i = 0; i < ROMLOCATION_COUNT; ++i)
     {
-        const EMU_RomLocation location = (EMU_RomLocation)i;
+        const RomLocation location = (RomLocation)i;
 
         // rom_data should be populated at this point
         // if it isn't, then there isn't a rom for this location
@@ -205,32 +205,32 @@ void Emulator::LoadNVRAM()
     }
 }
 
-std::span<uint8_t> Emulator::MapBuffer(EMU_RomLocation location)
+std::span<uint8_t> Emulator::MapBuffer(RomLocation location)
 {
     switch (location)
     {
-    case EMU_RomLocation::ROM1:
+    case RomLocation::ROM1:
         return GetMCU().rom1;
-    case EMU_RomLocation::ROM2:
+    case RomLocation::ROM2:
         return GetMCU().rom2;
-    case EMU_RomLocation::WAVEROM1:
+    case RomLocation::WAVEROM1:
         return GetPCM().waverom1;
-    case EMU_RomLocation::WAVEROM2:
+    case RomLocation::WAVEROM2:
         return GetPCM().waverom2;
-    case EMU_RomLocation::WAVEROM3:
+    case RomLocation::WAVEROM3:
         return GetPCM().waverom3;
-    case EMU_RomLocation::WAVEROM_CARD:
+    case RomLocation::WAVEROM_CARD:
         return GetPCM().waverom_card;
-    case EMU_RomLocation::WAVEROM_EXP:
+    case RomLocation::WAVEROM_EXP:
         return GetPCM().waverom_exp;
-    case EMU_RomLocation::SMROM:
+    case RomLocation::SMROM:
         return m_sm->rom;
     }
     fprintf(stderr, "FATAL: MapBuffer called with invalid location %d\n", (int)location);
     std::abort();
 }
 
-bool Emulator::LoadRom(EMU_RomLocation location, std::span<const uint8_t> source)
+bool Emulator::LoadRom(RomLocation location, std::span<const uint8_t> source)
 {
     auto buffer = MapBuffer(location);
 
@@ -243,7 +243,7 @@ bool Emulator::LoadRom(EMU_RomLocation location, std::span<const uint8_t> source
         return false;
     }
 
-    if (location == EMU_RomLocation::ROM2)
+    if (location == RomLocation::ROM2)
     {
         if (!std::has_single_bit(source.size()))
         {

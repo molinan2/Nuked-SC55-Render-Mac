@@ -270,7 +270,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
                 return R_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_overrides[(size_t)EMU_RomLocation::ROM1] = reader.Arg();
+            result.adv.rom_overrides[(size_t)RomLocation::ROM1] = reader.Arg();
         }
         else if (reader.Any("--override-rom2"))
         {
@@ -279,7 +279,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
                 return R_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_overrides[(size_t)EMU_RomLocation::ROM2] = reader.Arg();
+            result.adv.rom_overrides[(size_t)RomLocation::ROM2] = reader.Arg();
         }
         else if (reader.Any("--override-smrom"))
         {
@@ -288,7 +288,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
                 return R_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_overrides[(size_t)EMU_RomLocation::SMROM] = reader.Arg();
+            result.adv.rom_overrides[(size_t)RomLocation::SMROM] = reader.Arg();
         }
         else if (reader.Any("--override-waverom1"))
         {
@@ -297,7 +297,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
                 return R_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_overrides[(size_t)EMU_RomLocation::WAVEROM1] = reader.Arg();
+            result.adv.rom_overrides[(size_t)RomLocation::WAVEROM1] = reader.Arg();
         }
         else if (reader.Any("--override-waverom2"))
         {
@@ -306,7 +306,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
                 return R_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_overrides[(size_t)EMU_RomLocation::WAVEROM2] = reader.Arg();
+            result.adv.rom_overrides[(size_t)RomLocation::WAVEROM2] = reader.Arg();
         }
         else if (reader.Any("--override-waverom3"))
         {
@@ -315,7 +315,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
                 return R_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_overrides[(size_t)EMU_RomLocation::WAVEROM3] = reader.Arg();
+            result.adv.rom_overrides[(size_t)RomLocation::WAVEROM3] = reader.Arg();
         }
         else if (reader.Any("--override-waverom-card"))
         {
@@ -324,7 +324,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
                 return R_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_overrides[(size_t)EMU_RomLocation::WAVEROM_CARD] = reader.Arg();
+            result.adv.rom_overrides[(size_t)RomLocation::WAVEROM_CARD] = reader.Arg();
         }
         else if (reader.Any("--override-waverom-exp"))
         {
@@ -333,7 +333,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
                 return R_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_overrides[(size_t)EMU_RomLocation::WAVEROM_EXP] = reader.Arg();
+            result.adv.rom_overrides[(size_t)RomLocation::WAVEROM_EXP] = reader.Arg();
         }
         else
         {
@@ -1022,7 +1022,7 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
     // Then create a track specifically for each emulator instance
     const R_TrackList split_tracks = R_SplitTrackModulo(merged_track, instances);
 
-    EMU_AllRomsetInfo romset_info;
+    AllRomsetInfo romset_info;
 
     common::LoadRomsetResult load_result;
 
@@ -1078,7 +1078,7 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
 
         render_states[i].emu.Init({.lcd_backend = nullptr, .nvram_filename = this_nvram});
 
-        EMU_RomLocationSet loaded{};
+        RomLocationSet loaded{};
         if (!render_states[i].emu.LoadRoms(load_result.romset, romset_info, &loaded))
         {
             fprintf(stderr, "FATAL: Failed to load roms for instance #%02zu\n", i);

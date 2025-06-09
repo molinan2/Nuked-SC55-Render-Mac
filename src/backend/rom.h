@@ -18,14 +18,14 @@ enum class Romset {
 
 constexpr size_t ROMSET_COUNT = 9;
 
-const char* EMU_RomsetName(Romset romset);
+const char* RomsetName(Romset romset);
 
-bool EMU_ParseRomsetName(std::string_view name, Romset& romset);
+bool ParseRomsetName(std::string_view name, Romset& romset);
 
-std::span<const char*> EMU_GetParsableRomsetNames();
+std::span<const char*> GetParsableRomsetNames();
 
 // Symbolic name for the various roms used by the emulator.
-enum class EMU_RomLocation
+enum class RomLocation
 {
     // MCU roms
     ROM1,
@@ -42,14 +42,14 @@ enum class EMU_RomLocation
     WAVEROM_EXP,
 };
 
-constexpr size_t EMU_ROMLOCATION_COUNT = 8;
+constexpr size_t ROMLOCATION_COUNT = 8;
 
-const char* ToCString(EMU_RomLocation location);
+const char* ToCString(RomLocation location);
 
-// Set of rom locations. Indexed by EMU_RomLocation.
-using EMU_RomLocationSet = std::array<bool, EMU_ROMLOCATION_COUNT>;
+// Set of rom locations. Indexed by RomLocation.
+using RomLocationSet = std::array<bool, ROMLOCATION_COUNT>;
 
 // Returns true if `location` represents a waverom location.
-bool EMU_IsWaverom(EMU_RomLocation location);
+bool IsWaverom(RomLocation location);
 
-bool EMU_IsOptionalRom(Romset romset, EMU_RomLocation location);
+bool IsOptionalRom(Romset romset, RomLocation location);

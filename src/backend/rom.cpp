@@ -24,12 +24,12 @@ const char* rs_name_simple[ROMSET_COUNT] = {
     "sc155mk2"
 };
 
-const char* EMU_RomsetName(Romset romset)
+const char* RomsetName(Romset romset)
 {
     return rs_name[(size_t)romset];
 }
 
-bool EMU_ParseRomsetName(std::string_view name, Romset& romset)
+bool ParseRomsetName(std::string_view name, Romset& romset)
 {
     for (size_t i = 0; i < ROMSET_COUNT; ++i)
     {
@@ -42,52 +42,52 @@ bool EMU_ParseRomsetName(std::string_view name, Romset& romset)
     return false;
 }
 
-std::span<const char*> EMU_GetParsableRomsetNames()
+std::span<const char*> GetParsableRomsetNames()
 {
     return rs_name_simple;
 }
 
-bool EMU_IsWaverom(EMU_RomLocation location)
+bool IsWaverom(RomLocation location)
 {
     switch (location)
     {
-    case EMU_RomLocation::WAVEROM1:
-    case EMU_RomLocation::WAVEROM2:
-    case EMU_RomLocation::WAVEROM3:
-    case EMU_RomLocation::WAVEROM_CARD:
-    case EMU_RomLocation::WAVEROM_EXP:
+    case RomLocation::WAVEROM1:
+    case RomLocation::WAVEROM2:
+    case RomLocation::WAVEROM3:
+    case RomLocation::WAVEROM_CARD:
+    case RomLocation::WAVEROM_EXP:
         return true;
     default:
         return false;
     }
 }
 
-const char* ToCString(EMU_RomLocation location)
+const char* ToCString(RomLocation location)
 {
     switch (location)
     {
-    case EMU_RomLocation::ROM1:
+    case RomLocation::ROM1:
         return "ROM1";
-    case EMU_RomLocation::ROM2:
+    case RomLocation::ROM2:
         return "ROM2";
-    case EMU_RomLocation::SMROM:
+    case RomLocation::SMROM:
         return "SMROM";
-    case EMU_RomLocation::WAVEROM1:
+    case RomLocation::WAVEROM1:
         return "WAVEROM1";
-    case EMU_RomLocation::WAVEROM2:
+    case RomLocation::WAVEROM2:
         return "WAVEROM2";
-    case EMU_RomLocation::WAVEROM3:
+    case RomLocation::WAVEROM3:
         return "WAVEROM3";
-    case EMU_RomLocation::WAVEROM_CARD:
+    case RomLocation::WAVEROM_CARD:
         return "WAVEROM_CARD";
-    case EMU_RomLocation::WAVEROM_EXP:
+    case RomLocation::WAVEROM_EXP:
         return "WAVEROM_EXP";
     }
     return "invalid location";
 }
 
-bool EMU_IsOptionalRom(Romset romset, EMU_RomLocation location)
+bool IsOptionalRom(Romset romset, RomLocation location)
 {
     return romset == Romset::JV880 &&
-           (location == EMU_RomLocation::WAVEROM_CARD || location == EMU_RomLocation::WAVEROM_EXP);
+           (location == RomLocation::WAVEROM_CARD || location == RomLocation::WAVEROM_EXP);
 }
