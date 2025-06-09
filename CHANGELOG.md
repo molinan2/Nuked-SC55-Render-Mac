@@ -1,4 +1,4 @@
-# Version 0.6.0 (TBD)
+# Version 0.6.0 (2025-06-09)
 
 This release contains bugfixes and a couple quality of life enhancements.
 
