@@ -1,15 +1,6 @@
 # Version 0.6.0 (TBD)
 
-## Breaking changes
-
-- The emulator backend no longer depends on SDL. `Emulator::Init` now accepts
-  an LCD backend pointer that can be used to customize the behavior of the LCD
-  on a per-application basis. The old SDL backend has been moved to the
-  standard frontend.
-- `Emulator::LoadRoms` now requires rom data to be loaded into an instance of
-  `AllRomsetInfo` by the caller. Several functions have been added to help with
-  this. See `emu.h` for more information. A complete example can be found under
-  `common/rom_loader.h` and its accompanying source file.
+This release contains bugfixes and a couple quality of life enhancements.
 
 ## Enhancements
 
@@ -38,6 +29,17 @@
   non-English characters. (#30)
 - Fixed renderer desync when using multiple instances and one of the instances
   received midi data starting later than tick 0. (#42)
+
+## Breaking changes for developers
+
+- The emulator backend no longer depends on SDL. `Emulator::Init` now accepts
+  an LCD backend pointer that can be used to customize the behavior of the LCD
+  on a per-application basis. The old SDL backend has been moved to the
+  standard frontend.
+- `Emulator::LoadRoms` now requires rom data to be loaded into an instance of
+  `AllRomsetInfo` by the caller. Several functions have been added to help with
+  this. See `emu.h` for more information. A complete example can be found under
+  `common/rom_loader.h` and its accompanying source file.
 
 # Version 0.5.0 (2025-03-21)
 
