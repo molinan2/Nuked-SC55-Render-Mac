@@ -1,5 +1,11 @@
 # Version 0.6.1 (TBD)
 
+## Enhancements
+
+- Added basic support for dumping EMIDI loop points. Currently, this only
+  includes CC 116 (track loop start) and CC 117 (track loop end). Pass
+  `--dump-emidi-loop-points` to the renderer to enable this feature. (#47)
+
 # Version 0.6.0 (2025-06-09)
 
 This release contains bugfixes and a couple quality of life enhancements.

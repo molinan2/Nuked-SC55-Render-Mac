@@ -77,3 +77,34 @@ If provided, this will set the romset to load. Otherwise, the renderer will
 autodetect the romset based on what filenames it finds in the rom directory.
 
 Run `nuked-sc55-render --help` to see a list of accepted romset names.
+
+### `--dump-emidi-loop-points`
+
+If provided, the renderer will print a reference frequency and all EMIDI loop
+points to **stderr** when finished.
+
+Currently, this setting only enables handling of MIDI CC 116 (track loop begin)
+and 117 (track loop end).
+
+EMIDI also supports global loop begin and end via CC 118 and 119 respectively,
+but these are not yet supported.
+
+The messages are formatted as follows:
+
+```
+rate=66207
+track 1 loop start at sample=46192 timestamp=00:00.69
+track 1 loop end at sample=4110616 timestamp=01:02.08
+...
+track 12 loop start at sample=46192 timestamp=00:00.69
+track 12 loop end at sample=4110622 timestamp=01:02.08
+```
+
+There can be as many messages as MIDI *tracks* (as opposed to MIDI channels) in
+the file. If multiple nested loops are present in a single track, each one will
+be printed in the order it was encountered.
+
+It is normal for loop points to differ slightly when rendering with multiple
+instances - each instance will be slightly out of sync with the others due to
+small timing differences. In this case, any of the sample or timestamp values
+are acceptable.

@@ -58,6 +58,7 @@ struct R_Parameters
     R_EndBehavior end_behavior = R_EndBehavior::Cut;
     std::filesystem::path nvram_filename;
     bool legacy_romset_detection = false;
+    bool dump_emidi_loop_points = false;
     R_AdvancedParameters adv;
 };
 
@@ -334,6 +335,10 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
             }
 
             result.adv.rom_overrides[(size_t)RomLocation::WAVEROM_EXP] = reader.Arg();
+        }
+        else if (reader.Any("--dump-emidi-loop-points"))
+        {
+            result.dump_emidi_loop_points = true;
         }
         else
         {
@@ -642,6 +647,11 @@ public:
         return m_chunk_size;
     }
 
+    size_t GetFramesWritten(size_t queue_id) const
+    {
+        return m_frames_written[queue_id];
+    }
+
     // Sets number of queues and prepares a chunk builder for each.
     // precondition: 0 <= count <= QUEUE_COUNT
     template <typename T>
@@ -666,6 +676,7 @@ public:
             m_cond.notify_one();
             m_chunks[queue_id] = AllocChunk<T>();
         }
+        ++m_frames_written[queue_id];
     }
 
     // Enqueues whatever data is left in the chunk builder for queue_id and marks it as complete. After this call, no
@@ -783,6 +794,7 @@ private:
     R_ChunkQueue m_queues[QUEUE_COUNT];
     R_OwnedChunk m_chunks[QUEUE_COUNT];
     bool         m_queue_complete[QUEUE_COUNT]{};
+    size_t       m_frames_written[QUEUE_COUNT]{};
 
     size_t m_queues_in_use = 0;
 
@@ -792,6 +804,47 @@ private:
     // Synchronization between producers/consumer.
     std::mutex              m_mutex;
     std::condition_variable m_cond;
+};
+
+enum R_LoopPointType
+{
+    Start,
+    End,
+};
+
+struct R_LoopPoint
+{
+    R_LoopPointType type;
+    uint64_t        frame;
+    uint64_t        timestamp_ns;
+    uint16_t        midi_track;
+    uint8_t         midi_channel;
+};
+
+class R_LoopPointRecorder
+{
+public:
+    void Record(const R_LoopPoint& point)
+    {
+        std::scoped_lock lk(m_mutex);
+        m_loop_points.emplace_back(point);
+    }
+
+    void SortByTrack()
+    {
+        std::stable_sort(m_loop_points.begin(), m_loop_points.end(), [](const auto& a, const auto& b) {
+            return a.midi_track < b.midi_track;
+        });
+    }
+
+    std::span<const R_LoopPoint> GetLoopPoints() const
+    {
+        return m_loop_points;
+    }
+
+private:
+    std::mutex                    m_mutex;
+    std::vector<R_LoopPoint> m_loop_points;
 };
 
 struct R_TrackRenderState
@@ -805,6 +858,7 @@ struct R_TrackRenderState
     std::chrono::high_resolution_clock::duration elapsed;
     size_t num_silent_frames = 0;
     R_EndBehavior end_behavior;
+    R_LoopPointRecorder* loop_recorder;
 
     // these fields are accessed from main thread during render process
     std::atomic<size_t> events_processed = 0;
@@ -905,6 +959,45 @@ uint64_t R_NSPerStep(Emulator& emu)
     }
 }
 
+void R_NsToTimeString(uint64_t ns, std::string& result)
+{
+    // one second in nanoseconds
+    constexpr uint64_t ONE_SEC = 1'000'000'000;
+
+    const uint64_t min  = ns / (60 * ONE_SEC);
+    const uint64_t sec  = (ns / ONE_SEC) % 60;
+    const uint64_t fsec = (uint64_t)(100.0 * ((double)(ns % ONE_SEC) / (double)ONE_SEC));
+
+    result.clear();
+    if (min < 10)
+    {
+        result += '0';
+    }
+    result += std::to_string(min);
+    result += ':';
+    if (sec < 10)
+    {
+        result += '0';
+    }
+    result += std::to_string(sec);
+    result += '.';
+    if (fsec < 10)
+    {
+        result += '0';
+    }
+    result += std::to_string(fsec);
+}
+
+bool R_IsEMIDILoopStart(const SMF_Data& data, const SMF_Event& ev)
+{
+    return ev.IsControlChange() && ev.GetData(data.bytes)[0] == 116;
+}
+
+bool R_IsEMIDILoopEnd(const SMF_Data& data, const SMF_Event& ev)
+{
+    return ev.IsControlChange() && ev.GetData(data.bytes)[0] == 117;
+}
+
 void R_RenderOne(const SMF_Data& data, R_TrackRenderState& state)
 {
     uint64_t division = data.header.division;
@@ -935,6 +1028,28 @@ void R_RenderOne(const SMF_Data& data, R_TrackRenderState& state)
         if (!event.IsMetaEvent())
         {
             R_PostEvent(state.emu, data, event);
+        }
+
+        // Save loop points - they will be processed on the main thread later
+        if (R_IsEMIDILoopStart(data, event))
+        {
+            state.loop_recorder->Record({
+                .type         = R_LoopPointType::Start,
+                .frame        = state.mixer->GetFramesWritten(state.queue_id),
+                .timestamp_ns = state.ns_simulated,
+                .midi_track   = event.track_id,
+                .midi_channel = event.GetChannel(),
+            });
+        }
+        else if (R_IsEMIDILoopEnd(data, event))
+        {
+            state.loop_recorder->Record({
+                .type         = R_LoopPointType::End,
+                .frame        = state.mixer->GetFramesWritten(state.queue_id),
+                .timestamp_ns = state.ns_simulated,
+                .midi_track   = event.track_id,
+                .midi_channel = event.GetChannel(),
+            });
         }
 
         ++state.events_processed;
@@ -1066,6 +1181,8 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
         break;
     }
 
+    R_LoopPointRecorder loop_recorder;
+
     R_TrackRenderState render_states[SMF_CHANNEL_COUNT];
     for (size_t i = 0; i < instances; ++i)
     {
@@ -1108,6 +1225,7 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
         render_states[i].mixer = &mixer;
         render_states[i].queue_id = i;
         render_states[i].end_behavior = params.end_behavior;
+        render_states[i].loop_recorder = &loop_recorder;
 
         render_states[i].thread = std::thread(R_RenderOne, std::cref(data), std::ref(render_states[i]));
     }
@@ -1184,6 +1302,37 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
 
     mix_out_thread.join();
 
+    if (params.dump_emidi_loop_points)
+    {
+        loop_recorder.SortByTrack();
+
+        const uint32_t frequency = PCM_GetOutputFrequency(render_states[0].emu.GetPCM());
+        fprintf(stderr, "rate=%zu\n", (size_t)frequency);
+
+        std::string time_str;
+        for (const auto& point : loop_recorder.GetLoopPoints())
+        {
+            R_NsToTimeString(point.timestamp_ns, time_str);
+            switch (point.type)
+            {
+            case R_LoopPointType::Start:
+                fprintf(stderr,
+                        "track %d loop start at sample=%zu timestamp=%s\n",
+                        point.midi_track,
+                        point.frame,
+                        time_str.c_str());
+                break;
+            case R_LoopPointType::End:
+                fprintf(stderr,
+                        "track %d loop end at sample=%zu timestamp=%s\n",
+                        point.midi_track,
+                        point.frame,
+                        time_str.c_str());
+                break;
+            }
+        }
+    }
+
     if (params.debug)
     {
         for (size_t i = 0; i < instances; ++i)
@@ -1232,6 +1381,9 @@ ROM management options:
                                not also passing --romset.
   --romset <name>              Sets the romset to load.
   --legacy-romset-detection    Load roms using specific filenames like upstream.
+
+MIDI options:
+  --dump-emidi-loop-points     Prints any encountered EMIDI loop points to stderr when finished.
 
 )";
 
