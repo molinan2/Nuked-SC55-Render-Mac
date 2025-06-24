@@ -859,21 +859,43 @@ struct R_TrackRenderState
     size_t num_silent_frames = 0;
     R_EndBehavior end_behavior;
     R_LoopPointRecorder* loop_recorder;
+    AudioFormat output_format;
 
     // these fields are accessed from main thread during render process
     std::atomic<size_t> events_processed = 0;
     std::atomic<bool> done;
 };
 
-bool R_IsSilence(const AudioFrame<int32_t>& in_raw)
+struct R_SilenceModelNone
 {
-    // The emulator doesn't produce exact zeroes when no notes are playing.
-    constexpr int32_t MIN = -0x4000;
-    constexpr int32_t MAX = +0x4000;
-    return MIN <= in_raw.left && in_raw.left <= MAX && MIN <= in_raw.right && in_raw.right <= MAX;
-}
+    static constexpr bool IsSilence(const AudioFrame<int32_t>& in_raw)
+    {
+        (void)in_raw;
+        return false;
+    }
+};
 
-template <typename SampleT>
+struct R_SilenceModelGeneric
+{
+    static constexpr bool IsSilence(const AudioFrame<int32_t>& in_raw)
+    {
+        // The emulator doesn't produce exact zeroes when no notes are playing.
+        constexpr int32_t MIN = -0x4000;
+        constexpr int32_t MAX = +0x4000;
+        return MIN <= in_raw.left && in_raw.left <= MAX && MIN <= in_raw.right && in_raw.right <= MAX;
+    }
+};
+
+struct R_SilenceModelMK1
+{
+    static constexpr bool IsSilence(const AudioFrame<int32_t>& in_raw)
+    {
+        // MK1 has a DC offset. TODO: Maybe want thresholds too?
+        return in_raw.left == 0x1000000 && in_raw.right == 0x1000000;
+    }
+};
+
+template <typename SampleT, typename SilenceModel>
 void R_ReceiveSample(void* userdata, const AudioFrame<int32_t>& in)
 {
     R_TrackRenderState* state = (R_TrackRenderState*)userdata;
@@ -881,13 +903,17 @@ void R_ReceiveSample(void* userdata, const AudioFrame<int32_t>& in)
     AudioFrame<SampleT> out;
     Normalize(in, out);
 
-    if (R_IsSilence(in))
+    // Skip silence processing until end of track
+    if constexpr (!std::is_same_v<SilenceModel, R_SilenceModelNone>)
     {
-        ++state->num_silent_frames;
-    }
-    else
-    {
-        state->num_silent_frames = 0;
+        if (SilenceModel::IsSilence(in))
+        {
+            ++state->num_silent_frames;
+        }
+        else
+        {
+            state->num_silent_frames = 0;
+        }
     }
 
     state->mixer->SubmitFrame(state->queue_id, out);
@@ -1057,6 +1083,38 @@ void R_RenderOne(const SMF_Data& data, R_TrackRenderState& state)
 
     if (state.end_behavior == R_EndBehavior::Release)
     {
+        // Enable silence processing callback
+        if (state.emu.GetMCU().is_mk1)
+        {
+            switch (state.output_format)
+            {
+            case AudioFormat::S16:
+                state.emu.SetSampleCallback(R_ReceiveSample<int16_t, R_SilenceModelMK1>, &state);
+                break;
+            case AudioFormat::S32:
+                state.emu.SetSampleCallback(R_ReceiveSample<int32_t, R_SilenceModelMK1>, &state);
+                break;
+            case AudioFormat::F32:
+                state.emu.SetSampleCallback(R_ReceiveSample<float, R_SilenceModelMK1>, &state);
+                break;
+            }
+        }
+        else
+        {
+            switch (state.output_format)
+            {
+            case AudioFormat::S16:
+                state.emu.SetSampleCallback(R_ReceiveSample<int16_t, R_SilenceModelGeneric>, &state);
+                break;
+            case AudioFormat::S32:
+                state.emu.SetSampleCallback(R_ReceiveSample<int32_t, R_SilenceModelGeneric>, &state);
+                break;
+            case AudioFormat::F32:
+                state.emu.SetSampleCallback(R_ReceiveSample<float, R_SilenceModelGeneric>, &state);
+                break;
+            }
+        }
+
         const uint32_t frequency = PCM_GetOutputFrequency(state.emu.GetPCM());
         // TODO: make this configurable? do we care? currently 100ms
         const size_t silence_time = frequency / 10;
@@ -1211,13 +1269,13 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
         switch (params.output_format)
         {
         case AudioFormat::S16:
-            render_states[i].emu.SetSampleCallback(R_ReceiveSample<int16_t>, &render_states[i]);
+            render_states[i].emu.SetSampleCallback(R_ReceiveSample<int16_t, R_SilenceModelNone>, &render_states[i]);
             break;
         case AudioFormat::S32:
-            render_states[i].emu.SetSampleCallback(R_ReceiveSample<int32_t>, &render_states[i]);
+            render_states[i].emu.SetSampleCallback(R_ReceiveSample<int32_t, R_SilenceModelNone>, &render_states[i]);
             break;
         case AudioFormat::F32:
-            render_states[i].emu.SetSampleCallback(R_ReceiveSample<float>, &render_states[i]);
+            render_states[i].emu.SetSampleCallback(R_ReceiveSample<float, R_SilenceModelNone>, &render_states[i]);
             break;
         }
 
@@ -1226,6 +1284,7 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
         render_states[i].queue_id = i;
         render_states[i].end_behavior = params.end_behavior;
         render_states[i].loop_recorder = &loop_recorder;
+        render_states[i].output_format = params.output_format;
 
         render_states[i].thread = std::thread(R_RenderOne, std::cref(data), std::ref(render_states[i]));
     }

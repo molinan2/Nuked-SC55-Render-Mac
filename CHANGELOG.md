@@ -6,6 +6,11 @@
   includes CC 116 (track loop start) and CC 117 (track loop end). Pass
   `--dump-emidi-loop-points` to the renderer to enable this feature. (#47)
 
+## Bugfixes
+
+- Renderer `--end release` option now properly accounts for the MK1's DC
+  offset. (#48)
+
 # Version 0.6.0 (2025-06-09)
 
 This release contains bugfixes and a couple quality of life enhancements.
