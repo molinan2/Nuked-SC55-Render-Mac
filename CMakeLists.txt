@@ -105,6 +105,7 @@ target_enable_warnings(nuked-sc55-backend)
 add_library(nuked-sc55-common)
 target_sources(nuked-sc55-common
     PRIVATE
+    src/common/gain.cpp
     src/common/rom_loader.cpp
 )
 target_compile_features(nuked-sc55-common PRIVATE cxx_std_23)

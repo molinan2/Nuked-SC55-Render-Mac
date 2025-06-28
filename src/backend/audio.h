@@ -57,3 +57,10 @@ inline void MixFrame(AudioFrame<float>& dest, const AudioFrame<float>& src)
     dest.left  += src.left;
     dest.right += src.right;
 }
+
+template <typename SampleT>
+void Scale(AudioFrame<SampleT>& frame, float scalar_gain)
+{
+    frame.left  = (SampleT)((float)frame.left * scalar_gain);
+    frame.right = (SampleT)((float)frame.right * scalar_gain);
+}

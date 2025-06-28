@@ -5,6 +5,8 @@
 - Added basic support for dumping EMIDI loop points. Currently, this only
   includes CC 116 (track loop start) and CC 117 (track loop end). Pass
   `--dump-emidi-loop-points` to the renderer to enable this feature. (#47)
+- Added a `--gain <amount>db` option to both frontends. This can be used to
+  increase or decrease the output volume. (#46)
 
 ## Bugfixes
 
