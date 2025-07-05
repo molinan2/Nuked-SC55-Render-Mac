@@ -18,14 +18,17 @@ float ScalarToDb(float scalar)
 
 ParseGainResult ParseGain(std::string_view str, float& out_gain)
 {
-    if (str.length() < 3)
+    using namespace std::literals;
+
+    // from_chars handles leading '-' but not '+'
+    if (str.starts_with('+'))
     {
-        return ParseGainResult::TooShort;
+        str.remove_prefix(1);
     }
 
-    if (str.substr(str.length() - 2) != "db")
+    if (!str.ends_with("db"sv))
     {
-        return ParseGainResult::NoSuffix;
+        return ParseGainResult::InvalidSuffix;
     }
 
     const char* n_first = str.data();

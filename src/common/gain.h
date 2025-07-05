@@ -18,7 +18,7 @@ struct GainDb
 enum class ParseGainResult
 {
     TooShort = 1,
-    NoSuffix,
+    InvalidSuffix,
     ParseFailed,
 };
 
