@@ -361,7 +361,7 @@ static constexpr KnownHash ROM_HASHES[] = {
     ///////////////////////////////////////////////////////////////////////////
 
     // R00128523 (H8/532 mcu)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::CM300, RomLocation::ROM1},
+    {ToDigest("9ec66abb5231b6c6f46f48b33d5412703041037d69a6803626ac402f25552af2"), Romset::CM300, RomLocation::ROM1},
     // R00128567 (H8/532 extra code)
     {ToDigest("f89442734fdebacae87c7707c01b2d7fdbf5940abae738987aee912d34b5882e"), Romset::CM300, RomLocation::ROM2},
     // R15279806 (WAVE A)
