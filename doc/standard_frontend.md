@@ -100,6 +100,21 @@ the ASIO driver requests when handed off for output.
 Disables oversampling, halving output frequency. Normally the emulator produces
 two frames at a time. When you set this option, the second one will be dropped.
 
+### `--gain <amount>`
+
+Applies gain to the output. This can be used to increase or decrease the
+volume. If `<amount>` ends in `db` the preceding number will be interpreted as
+decibels.
+
+Examples:
+
+- `--gain 2`: double volume
+- `--gain 0.5`: half volume
+- `--gain +6db`: double volume
+- `--gain -6db`: half volume
+
+The exact formula used for decibel to scalar conversion is `scale = pow(10, db / 20)`
+
 ### `-r, --reset none|gs|gm`
 
 Sends a reset message to the emulator on startup.

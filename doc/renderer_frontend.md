@@ -32,6 +32,21 @@ Sets the output format.
 
 Halves output frequency of the emulator. This trades audio quality for space.
 
+### `--gain <amount>`
+
+Applies gain to the output. This can be used to increase or decrease the
+volume. If `<amount>` ends in `db` the preceding number will be interpreted as
+decibels.
+
+Examples:
+
+- `--gain 2`: double volume
+- `--gain 0.5`: half volume
+- `--gain +6db`: double volume
+- `--gain -6db`: half volume
+
+The exact formula used for decibel to scalar conversion is `scale = pow(10, db / 20)`
+
 ### `--end cut|release`
 
 Choose how the end of the track is handled:

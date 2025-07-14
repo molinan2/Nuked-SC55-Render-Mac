@@ -19,6 +19,7 @@
 #include <string>
 #include <thread>
 
+#include "common/gain.h"
 #include "common/rom_loader.h"
 
 #ifdef _WIN32
@@ -59,6 +60,7 @@ struct R_Parameters
     std::filesystem::path nvram_filename;
     bool legacy_romset_detection = false;
     bool dump_emidi_loop_points = false;
+    float gain = 1.0f;
     R_AdvancedParameters adv;
 };
 
@@ -75,6 +77,7 @@ enum class R_ParseError
     FormatInvalid,
     EndInvalid,
     ResetInvalid,
+    GainInvalid,
 };
 
 const char* R_ParseErrorStr(R_ParseError err)
@@ -103,6 +106,8 @@ const char* R_ParseErrorStr(R_ParseError err)
             return "End behavior invalid";
         case R_ParseError::ResetInvalid:
             return "Reset invalid (should be none, gs, or gm)";
+        case R_ParseError::GainInvalid:
+            return "Gain invalid (should be a number optionally ending in 'db')";
     }
     return "Unknown error";
 }
@@ -240,6 +245,18 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
         {
             result.disable_oversampling = true;
         }
+        else if (reader.Any("--gain"))
+        {
+            if (!reader.Next())
+            {
+                return R_ParseError::UnexpectedEnd;
+            }
+
+            if (common::ParseGain(reader.Arg(), result.gain) != common::ParseGainResult{})
+            {
+                return R_ParseError::GainInvalid;
+            }
+        }
         else if (reader.Any("--legacy-romset-detection"))
         {
             result.legacy_romset_detection = true;
@@ -363,6 +380,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
     return R_ParseError::Success;
 }
 
+[[noreturn]]
 void R_Panic(const char* msg, const std::source_location where = std::source_location::current())
 {
     fprintf(stderr, "%s:%d: in %s: %s", where.file_name(), (int)where.line(), where.function_name(), msg);
@@ -860,6 +878,7 @@ struct R_TrackRenderState
     R_EndBehavior end_behavior;
     R_LoopPointRecorder* loop_recorder;
     AudioFormat output_format;
+    float gain = 1.0f;
 
     // these fields are accessed from main thread during render process
     std::atomic<size_t> events_processed = 0;
@@ -895,7 +914,7 @@ struct R_SilenceModelMK1
     }
 };
 
-template <typename SampleT, typename SilenceModel>
+template <typename SampleT, typename SilenceModel, bool ApplyGain>
 void R_ReceiveSample(void* userdata, const AudioFrame<int32_t>& in)
 {
     R_TrackRenderState* state = (R_TrackRenderState*)userdata;
@@ -914,6 +933,11 @@ void R_ReceiveSample(void* userdata, const AudioFrame<int32_t>& in)
         {
             state->num_silent_frames = 0;
         }
+    }
+
+    if constexpr (ApplyGain)
+    {
+        Scale(out, state->gain);
     }
 
     state->mixer->SubmitFrame(state->queue_id, out);
@@ -1024,6 +1048,39 @@ bool R_IsEMIDILoopEnd(const SMF_Data& data, const SMF_Event& ev)
     return ev.IsControlChange() && ev.GetData(data.bytes)[0] == 117;
 }
 
+template <typename SilenceModel>
+constexpr mcu_sample_callback R_PickCallback(const R_TrackRenderState& state)
+{
+    if (state.gain != 1.0f)
+    {
+        switch (state.output_format)
+        {
+        case AudioFormat::S16:
+            return R_ReceiveSample<int16_t, SilenceModel, true>;
+        case AudioFormat::S32:
+            return R_ReceiveSample<int32_t, SilenceModel, true>;
+        case AudioFormat::F32:
+            return R_ReceiveSample<float, SilenceModel, true>;
+        }
+    }
+    else
+    {
+        switch (state.output_format)
+        {
+        case AudioFormat::S16:
+            return R_ReceiveSample<int16_t, SilenceModel, false>;
+        case AudioFormat::S32:
+            return R_ReceiveSample<int32_t, SilenceModel, false>;
+        case AudioFormat::F32:
+            return R_ReceiveSample<float, SilenceModel, false>;
+        }
+    }
+
+    fprintf(stderr, "output_format = %d\n", (int)state.output_format);
+    fprintf(stderr, "gain = %f\n", state.gain);
+    R_Panic("no valid callback for state");
+}
+
 void R_RenderOne(const SMF_Data& data, R_TrackRenderState& state)
 {
     uint64_t division = data.header.division;
@@ -1086,33 +1143,11 @@ void R_RenderOne(const SMF_Data& data, R_TrackRenderState& state)
         // Enable silence processing callback
         if (state.emu.GetMCU().is_mk1)
         {
-            switch (state.output_format)
-            {
-            case AudioFormat::S16:
-                state.emu.SetSampleCallback(R_ReceiveSample<int16_t, R_SilenceModelMK1>, &state);
-                break;
-            case AudioFormat::S32:
-                state.emu.SetSampleCallback(R_ReceiveSample<int32_t, R_SilenceModelMK1>, &state);
-                break;
-            case AudioFormat::F32:
-                state.emu.SetSampleCallback(R_ReceiveSample<float, R_SilenceModelMK1>, &state);
-                break;
-            }
+            state.emu.SetSampleCallback(R_PickCallback<R_SilenceModelMK1>(state), &state);
         }
         else
         {
-            switch (state.output_format)
-            {
-            case AudioFormat::S16:
-                state.emu.SetSampleCallback(R_ReceiveSample<int16_t, R_SilenceModelGeneric>, &state);
-                break;
-            case AudioFormat::S32:
-                state.emu.SetSampleCallback(R_ReceiveSample<int32_t, R_SilenceModelGeneric>, &state);
-                break;
-            case AudioFormat::F32:
-                state.emu.SetSampleCallback(R_ReceiveSample<float, R_SilenceModelGeneric>, &state);
-                break;
-            }
+            state.emu.SetSampleCallback(R_PickCallback<R_SilenceModelGeneric>(state), &state);
         }
 
         const uint32_t frequency = PCM_GetOutputFrequency(state.emu.GetPCM());
@@ -1225,6 +1260,8 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
         reset = EMU_SystemReset::GS_RESET;
     }
 
+    fprintf(stderr, "Gain set to %.2fdb\n", common::ScalarToDb(params.gain));
+
     R_Mixer mixer;
     switch (params.output_format)
     {
@@ -1266,25 +1303,15 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
         fprintf(stderr, "Initializing emulator #%02zu...\n", i);
         R_RunReset(render_states[i].emu, reset);
 
-        switch (params.output_format)
-        {
-        case AudioFormat::S16:
-            render_states[i].emu.SetSampleCallback(R_ReceiveSample<int16_t, R_SilenceModelNone>, &render_states[i]);
-            break;
-        case AudioFormat::S32:
-            render_states[i].emu.SetSampleCallback(R_ReceiveSample<int32_t, R_SilenceModelNone>, &render_states[i]);
-            break;
-        case AudioFormat::F32:
-            render_states[i].emu.SetSampleCallback(R_ReceiveSample<float, R_SilenceModelNone>, &render_states[i]);
-            break;
-        }
-
         render_states[i].track = &split_tracks.tracks[i];
         render_states[i].mixer = &mixer;
         render_states[i].queue_id = i;
         render_states[i].end_behavior = params.end_behavior;
         render_states[i].loop_recorder = &loop_recorder;
         render_states[i].output_format = params.output_format;
+        render_states[i].gain = params.gain;
+
+        render_states[i].emu.SetSampleCallback(R_PickCallback<R_SilenceModelNone>(render_states[i]), &render_states[i]);
 
         render_states[i].thread = std::thread(R_RenderOne, std::cref(data), std::ref(render_states[i]));
     }
@@ -1425,6 +1452,7 @@ General options:
 Audio options:
   -f, --format s16|s32|f32     Set output format.
   --disable-oversampling       Halves output frequency.
+  --gain <amount>              Apply gain to the output.
   --end cut|release            Choose how the end of the track is handled:
         cut (default)              Stop rendering at the last MIDI event
         release                    Continue to render audio after the last MIDI event until silence

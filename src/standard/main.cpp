@@ -52,6 +52,7 @@
 #include "output_asio.h"
 #include "output_sdl.h"
 
+#include "common/gain.h"
 #include "common/rom_loader.h"
 
 #ifdef _WIN32
@@ -83,6 +84,8 @@ struct FE_Instance
 
     uint32_t buffer_size;
     uint32_t buffer_count;
+
+    float gain = 1.0f;
 
 #if NUKED_ENABLE_ASIO
     // ASIO uses an SDL_AudioStream because it needs resampling to a more conventional frequency, but putting data into
@@ -153,6 +156,7 @@ struct FE_Parameters
     std::string asio_right_channel;
     std::filesystem::path nvram_filename;
     FE_AdvancedParameters adv;
+    float gain = 1.0f;
 };
 
 bool FE_AllocateInstance(FE_Application& container, FE_Instance** result)
@@ -214,13 +218,19 @@ void FE_RouteMIDI(FE_Application& fe, std::span<const uint8_t> bytes)
     }
 }
 
-template <typename SampleT>
+template <typename SampleT, bool ApplyGain>
 void FE_ReceiveSampleSDL(void* userdata, const AudioFrame<int32_t>& in)
 {
     FE_Instance& fe = *(FE_Instance*)userdata;
 
     AudioFrame<SampleT>* out = (AudioFrame<SampleT>*)fe.chunk_first;
     Normalize(in, *out);
+
+    if constexpr (ApplyGain)
+    {
+        Scale(*out, fe.gain);
+    }
+
     fe.chunk_first = out + 1;
 
     if (fe.chunk_first == fe.chunk_last)
@@ -231,13 +241,19 @@ void FE_ReceiveSampleSDL(void* userdata, const AudioFrame<int32_t>& in)
 }
 
 #if NUKED_ENABLE_ASIO
-template <typename SampleT>
+template <typename SampleT, bool ApplyGain>
 void FE_ReceiveSampleASIO(void* userdata, const AudioFrame<int32_t>& in)
 {
     FE_Instance& fe = *(FE_Instance*)userdata;
 
     AudioFrame<SampleT>* out = (AudioFrame<SampleT>*)fe.chunk_first;
     Normalize(in, *out);
+
+    if constexpr (ApplyGain)
+    {
+        Scale(*out, fe.gain);
+    }
+
     fe.chunk_first = out + 1;
 
     if (fe.chunk_first == fe.chunk_last)
@@ -251,6 +267,74 @@ void FE_ReceiveSampleASIO(void* userdata, const AudioFrame<int32_t>& in)
     }
 }
 #endif
+
+constexpr mcu_sample_callback FE_PickCallback(const FE_Application& app, const FE_Instance& inst)
+{
+    if (app.audio_output.kind == AudioOutputKind::SDL)
+    {
+        if (inst.gain != 1.f)
+        {
+            switch (inst.format)
+            {
+            case AudioFormat::S16:
+                return FE_ReceiveSampleSDL<int16_t, true>;
+            case AudioFormat::S32:
+                return FE_ReceiveSampleSDL<int32_t, true>;
+            case AudioFormat::F32:
+                return FE_ReceiveSampleSDL<float, true>;
+            }
+        }
+        else
+        {
+            switch (inst.format)
+            {
+            case AudioFormat::S16:
+                return FE_ReceiveSampleSDL<int16_t, false>;
+            case AudioFormat::S32:
+                return FE_ReceiveSampleSDL<int32_t, false>;
+            case AudioFormat::F32:
+                return FE_ReceiveSampleSDL<float, false>;
+            }
+        }
+    }
+    else
+    {
+#if NUKED_ENABLE_ASIO
+        if (inst.gain != 1.f)
+        {
+            switch (inst.format)
+            {
+            case AudioFormat::S16:
+                return FE_ReceiveSampleASIO<int16_t, true>;
+            case AudioFormat::S32:
+                return FE_ReceiveSampleASIO<int32_t, true>;
+            case AudioFormat::F32:
+                return FE_ReceiveSampleASIO<float, true>;
+            }
+        }
+        else
+        {
+            switch (inst.format)
+            {
+            case AudioFormat::S16:
+                return FE_ReceiveSampleASIO<int16_t, false>;
+            case AudioFormat::S32:
+                return FE_ReceiveSampleASIO<int32_t, false>;
+            case AudioFormat::F32:
+                return FE_ReceiveSampleASIO<float, false>;
+            }
+        }
+#else
+        fprintf(stderr, "PANIC: FE_PickCallback tried to select ASIO output without ASIO support\n");
+        std::abort();
+#endif
+    }
+
+    fprintf(stderr, "output kind = %d\n", (int)app.audio_output.kind);
+    fprintf(stderr, "gain = %f\n", inst.gain);
+    fprintf(stderr, "format = %d\n", (int)inst.format);
+    return nullptr;
+}
 
 enum class FE_PickOutputResult
 {
@@ -419,18 +503,16 @@ bool FE_OpenSDLAudio(FE_Application& fe, const AudioOutputParameters& params, co
     for (size_t i = 0; i < fe.instances_in_use; ++i)
     {
         FE_Instance& inst = fe.instances[i];
+        inst.emu.SetSampleCallback(FE_PickCallback(fe, inst), &inst);
         switch (inst.format)
         {
         case AudioFormat::S16:
-            inst.emu.SetSampleCallback(FE_ReceiveSampleSDL<int16_t>, &inst);
             inst.CreateAndPrepareBuffer<int16_t>();
             break;
         case AudioFormat::S32:
-            inst.emu.SetSampleCallback(FE_ReceiveSampleSDL<int32_t>, &inst);
             inst.CreateAndPrepareBuffer<int32_t>();
             break;
         case AudioFormat::F32:
-            inst.emu.SetSampleCallback(FE_ReceiveSampleSDL<float>, &inst);
             inst.CreateAndPrepareBuffer<float>();
             break;
         }
@@ -468,19 +550,18 @@ bool FE_OpenASIOAudio(FE_Application& fe, const ASIO_OutputParameters& params, c
                                          Out_ASIO_GetFrequency());
         Out_ASIO_AddSource(inst.stream);
 
+        inst.emu.SetSampleCallback(FE_PickCallback(fe, inst), &inst);
+
         switch (inst.format)
         {
         case AudioFormat::S16:
             inst.CreateAndPrepareBuffer<int16_t>();
-            inst.emu.SetSampleCallback(FE_ReceiveSampleASIO<int16_t>, &inst);
             break;
         case AudioFormat::S32:
             inst.CreateAndPrepareBuffer<int32_t>();
-            inst.emu.SetSampleCallback(FE_ReceiveSampleASIO<int32_t>, &inst);
             break;
         case AudioFormat::F32:
             inst.CreateAndPrepareBuffer<float>();
-            inst.emu.SetSampleCallback(FE_ReceiveSampleASIO<float>, &inst);
             break;
         }
         fprintf(
@@ -755,6 +836,7 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
     fe->format       = params.output_format;
     fe->buffer_size  = params.buffer_size;
     fe->buffer_count = params.buffer_count;
+    fe->gain         = params.gain;
 
     if (!params.no_lcd)
     {
@@ -846,6 +928,7 @@ enum class FE_ParseError
     ASIOSampleRateOutOfRange,
     ASIOChannelInvalid,
     ResetInvalid,
+    GainInvalid,
 };
 
 const char* FE_ParseErrorStr(FE_ParseError err)
@@ -876,6 +959,8 @@ const char* FE_ParseErrorStr(FE_ParseError err)
             return "ASIO channel invalid";
         case FE_ParseError::ResetInvalid:
             return "Reset invalid (should be none, gs, or gm)";
+        case FE_ParseError::GainInvalid:
+            return "Gain invalid (should be a number optionally ending in 'db')";
         }
     return "Unknown error";
 }
@@ -1019,6 +1104,18 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
         else if (reader.Any("--disable-oversampling"))
         {
             result.disable_oversampling = true;
+        }
+        else if (reader.Any("--gain"))
+        {
+            if (!reader.Next())
+            {
+                return FE_ParseError::UnexpectedEnd;
+            }
+
+            if (common::ParseGain(reader.Arg(), result.gain) != common::ParseGainResult{})
+            {
+                return FE_ParseError::GainInvalid;
+            }
         }
         else if (reader.Any("-d", "--rom-directory"))
         {
@@ -1186,6 +1283,7 @@ Audio options:
   -b, --buffer-size  <size>[:count]             Set buffer size, number of buffers.
   -f, --format       s16|s32|f32                Set output format.
   --disable-oversampling                        Halves output frequency.
+  --gain <amount>                               Apply gain to the output.
 
 Emulator options:
   -r, --reset     none|gs|gm                    Reset system in GS or GM mode.
@@ -1298,6 +1396,8 @@ int main(int argc, char *argv[])
         fprintf(stderr, "FATAL ERROR: Failed to initialize frontend\n");
         return 1;
     }
+
+    fprintf(stderr, "Gain set to %.2fdb\n", common::ScalarToDb(params.gain));
 
     for (size_t i = 0; i < params.instances; ++i)
     {
