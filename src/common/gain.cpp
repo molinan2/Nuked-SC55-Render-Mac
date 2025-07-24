@@ -86,17 +86,7 @@ ParseGainResult ParseGain(std::string_view str, float& out_gain)
         str.remove_prefix(1);
     }
 
-    const char* const n_first = str.data();
-    const char* const n_last  = str.data() + str.size();
-
     float num = 0.0f;
-
-    auto fc_result = std::from_chars(n_first, n_last, num);
-
-    if (fc_result.ec != std::errc{})
-    {
-        return ParseGainResult::ParseFailed;
-    }
 
     switch (unit)
     {

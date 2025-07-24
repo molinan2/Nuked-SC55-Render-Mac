@@ -9,24 +9,21 @@ Requirements:
 Tested compilers:
 
 - msvc 19.39.33523
-- clang 19.1.7
+- clang 19.1.7 _(17.0.0 with this fork)_
 - gcc 14.2.0
 
-Full build
+Full build with optimizations for the local machine:
 
 ```bash
-git clone git@github.com:jcmoyer/Nuked-SC55.git
-cd Nuked-SC55
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-cmake --build .
+git clone git@github.com:molinan2/Nuked-SC55-Render-Mac.git
+cd Nuked-SC55-Render-Mac
 ```
 
-If you're building a binary to only run on your local machine, consider adding
-`-DCMAKE_CXX_FLAGS="-march=native -mtune=native"
--DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON` to the first cmake command above to
-enable more optimizations.
+```bash
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-march=native -mtune=native" -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON ..
+cmake --build .
+```
 
 After building, you can create a self-contained install with any required files
 in their correct locations under `<path>`:
