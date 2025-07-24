@@ -1,3 +1,9 @@
+# Nuked SC-55 Render Mac
+
+Fork of [jcmoyer/Nuked-SC55](https://github.com/jcmoyer/Nuked-SC55). Motivation is to make it compilable under MacOS 15.5, Xcode 16.4 and Apple clang version 17.0.0.
+
+This is an experimental fork for learning purposes only. Any changes here could (and will certainly) be breaking, so please don't use it.
+
 # Nuked SC-55
 
 Fork of [nukeykt/Nuked-SC55](https://github.com/nukeykt/Nuked-SC55) with the
