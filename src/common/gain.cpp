@@ -2,6 +2,7 @@
 
 #include <charconv>
 #include <cmath>
+#include <string>
 
 namespace common
 {
@@ -87,6 +88,21 @@ ParseGainResult ParseGain(std::string_view str, float& out_gain)
     }
 
     float num = 0.0f;
+
+    #if defined(__clang__) && (__clang_major__ >= 14)
+    // Apple Clang or LLVM Clang: use std::stof fallback
+    try {
+        num = std::stof(std::string(str));
+    } catch (...) {
+        return ParseGainResult::ParseFailed;
+    }
+    #else
+    // Use from_chars if supported (GCC or MSVC)
+    auto fc_result = std::from_chars(n_first, n_last, num);
+    if (fc_result.ec != std::errc{}) {
+        return ParseGainResult::ParseFailed;
+    }
+    #endif
 
     switch (unit)
     {
